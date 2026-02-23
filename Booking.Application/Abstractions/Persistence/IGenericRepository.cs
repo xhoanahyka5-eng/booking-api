@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace Booking.Application.Abstractions.Persistence;
+﻿namespace Booking.Application.Abstractions.Persistence;
 
 public interface IGenericRepository<TEntity>
     where TEntity : class
@@ -11,7 +9,7 @@ public interface IGenericRepository<TEntity>
 
     Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken);
 
-    void Update(TEntity entity);
+    Task UpdateAsync(TEntity entity, CancellationToken cancellationToken);
 
-    void Delete(TEntity entity);
+    Task DeleteAsync(TEntity entity, CancellationToken cancellationToken);
 }

@@ -19,6 +19,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity>
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken)
     {
         await _dbSet.AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<TEntity?> GetByIdAsync(object id, CancellationToken cancellationToken)
@@ -31,13 +32,15 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity>
         return await _dbSet.ToListAsync(cancellationToken);
     }
 
-    public void Update(TEntity entity)
+    public async Task UpdateAsync(TEntity entity, CancellationToken cancellationToken)
     {
         _dbSet.Update(entity);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public void Delete(TEntity entity)
+    public async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken)
     {
         _dbSet.Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

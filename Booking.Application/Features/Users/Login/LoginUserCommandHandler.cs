@@ -23,7 +23,6 @@ public class LoginUserCommandHandler
         LoginUserCommand request,
         CancellationToken cancellationToken)
     {
-        // 1️⃣ Merr user nga databaza
         var user = await _userRepository.GetByEmailAsync(
             request.Email,
             cancellationToken
@@ -32,7 +31,6 @@ public class LoginUserCommandHandler
         if (user is null)
             throw new InvalidOperationException("Invalid credentials.");
 
-        // 2️⃣ Verifiko password
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(
             request.Password,
             user.Password
@@ -41,7 +39,6 @@ public class LoginUserCommandHandler
         if (!isPasswordValid)
             throw new InvalidOperationException("Invalid credentials.");
 
-        // 3️⃣ Gjenero JWT
         var token = _jwtTokenGenerator.GenerateToken(user);
 
         return token;
