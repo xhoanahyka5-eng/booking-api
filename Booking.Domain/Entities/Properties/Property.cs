@@ -4,15 +4,15 @@ namespace Booking.Domain.Entities.Properties;
 
 public class Property
 {
-    public int Id { get; set; } // PK (mund të mbetet int)
+    public int Id { get; set; } 
 
-    public Guid OwnerId { get; set; }        // FK -> Users.Id (GUID)
+    public Guid OwnerId { get; set; }        
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
 
     public PropertyType PropertyType { get; set; } = PropertyType.Apartment;
 
-    public int AddressId { get; set; }      // FK -> Addresses.Id (int)
+    public int AddressId { get; set; }      
 
     public int MaxGuests { get; set; }
     public TimeOnly CheckInTime { get; set; }

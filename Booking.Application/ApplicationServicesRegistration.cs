@@ -9,9 +9,7 @@ public static class ApplicationServicesRegistration
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // ======================
-        // MEDIATR
-        // ======================
+        
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(
@@ -19,16 +17,12 @@ public static class ApplicationServicesRegistration
             );
         });
 
-        // ======================
-        // FLUENT VALIDATION
-        // ======================
+    
         services.AddValidatorsFromAssembly(
             typeof(ApplicationServicesRegistration).Assembly
         );
 
-        // ======================
-        // PIPELINE BEHAVIORS
-        // ======================
+        
         services.AddTransient(
             typeof(IPipelineBehavior<,>),
             typeof(ValidationBehavior<,>)

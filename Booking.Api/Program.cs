@@ -1,17 +1,18 @@
-using Booking.Infrastructure;
-using Booking.Application;
 using Booking.Api.Features.Users;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Diagnostics;
+using Booking.Application;
+using Booking.Application.Abstractions.Authentication;
+using Booking.Infrastructure;
 
 using FluentValidation;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 // ======================
 // REGISTER SERVICES
@@ -20,13 +21,29 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// ✅ REGISTER FLUENT VALIDATORS
+builder.Services.AddValidatorsFromAssemblyContaining<
+    Booking.Application.Features.Users.Login.LoginUserCommandValidation>();
+
+// ======================
+// JWT SETTINGS (Strongly Typed)
+// ======================
+
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("JwtSettings"));
+
+var jwtSettings = builder.Configuration
+    .GetSection("JwtSettings")
+    .Get<JwtSettings>();
+
+if (jwtSettings is null || string.IsNullOrWhiteSpace(jwtSettings.SecretKey))
+{
+    throw new Exception("JWT configuration is missing or invalid.");
+}
 
 // ======================
 // JWT AUTHENTICATION
 // ======================
-
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"];
 
 builder.Services.AddAuthentication(options =>
 {
@@ -42,20 +59,20 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
 
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
 
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(secretKey!)
-        )
+            Encoding.UTF8.GetBytes(jwtSettings.SecretKey)
+        ),
+
+        ClockSkew = TimeSpan.Zero
     };
 });
 
 builder.Services.AddAuthorization();
 
-
 var app = builder.Build();
-
 
 // ======================
 // GLOBAL EXCEPTION HANDLING
@@ -82,6 +99,16 @@ app.UseExceptionHandler(errorApp =>
             return;
         }
 
+        if (exception is UnauthorizedAccessException)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new
+            {
+                message = exception.Message
+            });
+            return;
+        }
+
         if (exception is InvalidOperationException)
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
@@ -100,7 +127,6 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-
 // ======================
 // MIDDLEWARE
 // ======================
@@ -108,7 +134,6 @@ app.UseExceptionHandler(errorApp =>
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
 
 // ======================
 // MAP ENDPOINTS

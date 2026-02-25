@@ -1,5 +1,6 @@
-﻿using Booking.Application.Features.Users.Register;
-using Booking.Application.Features.Users.Login;
+﻿using Booking.Application.Features.Users.Login;
+using Booking.Application.Features.Users.Persistence;
+using Booking.Application.Features.Users.Register;
 using MediatR;
 
 namespace Booking.Api.Features.Users;
@@ -22,5 +23,11 @@ public static class UserEndpoints
                 var token = await sender.Send(command, ct);
                 return Results.Ok(new { token });
             });
+
+        app.MapGet("/api/v1/users", async (IUserRepository repo) =>
+        {
+            var users = await repo.GetAllAsync(CancellationToken.None);
+            return Results.Ok(users);
+        });
     }
 }

@@ -1,34 +1,62 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Booking.Domain.Entities.Bookings;
 
 public class Booking
 {
-    public int Id { get; set; } // PK (mund të mbetet int)
+    public int Id { get; private set; }
 
-    public int PropertyId { get; set; } // FK -> Properties.Id (int)
-    public Guid GuestId { get; set; }   // FK -> Users.Id (GUID)
+    public int PropertyId { get; private set; }
+    public Guid GuestId { get; private set; }
 
-    public DateOnly StartDate { get; set; }
-    public DateOnly EndDate { get; set; }
+    public DateOnly StartDate { get; private set; }
+    public DateOnly EndDate { get; private set; }
 
-    public int GuestCount { get; set; }
+    public int GuestCount { get; private set; }
 
-    public decimal CleaningFee { get; set; }
-    public decimal AmenitiesUpCharge { get; set; }
-    public decimal PriceForPeriod { get; set; }
-    public decimal TotalPrice { get; set; }
+    public decimal CleaningFee { get; private set; }
+    public decimal AmenitiesUpCharge { get; private set; }
+    public decimal PriceForPeriod { get; private set; }
 
-    public BookingStatus BookingStatus { get; set; } = BookingStatus.Pending;
+    [NotMapped]
+    public decimal TotalPrice =>
+        PriceForPeriod + CleaningFee + AmenitiesUpCharge;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? LastModifiedAt { get; set; }
+    public BookingStatus BookingStatus { get; private set; }
 
-    public DateTime CreatedOnUtc { get; set; } = DateTime.UtcNow;
-    public DateTime? ConfirmedOnUtc { get; set; }
-    public DateTime? RejectedOnUtc { get; set; }
-    public DateTime? CompletedOnUtc { get; set; }
-    public DateTime? CancelledOnUtc { get; set; }
+    // 🔥 Rikthe këto
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? LastModifiedAt { get; private set; }
+
+    public DateTime? ConfirmedOnUtc { get; private set; }
+    public DateTime? RejectedOnUtc { get; private set; }
+    public DateTime? CompletedOnUtc { get; private set; }
+    public DateTime? CancelledOnUtc { get; private set; }
+
+    private Booking() { }
+
+    public Booking(int propertyId, Guid guestId, DateOnly start, DateOnly end, int guestCount)
+    {
+        PropertyId = propertyId;
+        GuestId = guestId;
+        StartDate = start;
+        EndDate = end;
+        GuestCount = guestCount;
+
+        CreatedAt = DateTime.UtcNow;
+        BookingStatus = BookingStatus.Pending;
+    }
+
+    public void Confirm()
+    {
+        if (BookingStatus != BookingStatus.Pending)
+            throw new Exception("Booking cannot be confirmed.");
+
+        BookingStatus = BookingStatus.Confirmed;
+        ConfirmedOnUtc = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow;
+    }
 }
 
 public enum BookingStatus

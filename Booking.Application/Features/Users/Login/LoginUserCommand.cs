@@ -1,8 +1,7 @@
-﻿using MediatR;
-
-namespace Booking.Application.Features.Users.Login;
+﻿using Booking.Application.Features.Users.Login;
+using MediatR;
 
 public record LoginUserCommand(
     string Email,
     string Password
-) : IRequest<string>;
+) : IRequest<LoginUserResponse>;

@@ -4,6 +4,7 @@ using Booking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Booking.Infrastructure.Migrations
 {
     [DbContext(typeof(BookingDbContext))]
-    partial class BookingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260224201232_UpdateUserPassword")]
+    partial class UpdateUserPassword
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,21 +69,9 @@ namespace Booking.Infrastructure.Migrations
                     b.Property<int>("BookingStatus")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("CancelledOnUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<decimal>("CleaningFee")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("CompletedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ConfirmedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date");
@@ -91,18 +82,12 @@ namespace Booking.Infrastructure.Migrations
                     b.Property<Guid>("GuestId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<decimal>("PriceForPeriod")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("PropertyId")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("RejectedOnUtc")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");

@@ -1,23 +1,67 @@
-﻿using System;
-using Booking.Domain.Entities.Users;
+﻿using Booking.Domain.Entities.Users;
 
 namespace Booking.Domain.Entities.OwnerProfiles;
 
 public class OwnerProfile
 {
-    public Guid UserId { get; set; } // PK, FK -> Users.Id (GUID)
+    public Guid UserId { get; private set; }
 
-    public string IdentityCardNumber { get; set; } = string.Empty;
-    public VerificationStatus VerificationStatus { get; set; } = VerificationStatus.Pending;
+    public string IdentityCardNumber { get; private set; } = null!;
 
-    public string? BusinessName { get; set; }
-    public string? CreditCardToken { get; set; }
+    public VerificationStatus VerificationStatus { get; private set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? LastModifiedAt { get; set; }
+    public string? BusinessName { get; private set; }
+    public string? CreditCardToken { get; private set; }
 
-    // Navigation
-    public User? User { get; set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? LastModifiedAt { get; private set; }
+
+    public User? User { get; private set; }
+
+    private OwnerProfile() { } // Required by EF
+
+    public OwnerProfile(Guid userId, string identityCardNumber, string? businessName = null)
+    {
+        if (string.IsNullOrWhiteSpace(identityCardNumber))
+            throw new ArgumentException("Identity card number cannot be empty.");
+
+        UserId = userId;
+        IdentityCardNumber = identityCardNumber;
+        BusinessName = businessName;
+
+        VerificationStatus = VerificationStatus.Pending;
+        CreatedAt = DateTime.UtcNow;
+    }
+
+    public void Verify()
+    {
+        if (VerificationStatus == VerificationStatus.Verified)
+            throw new InvalidOperationException("Owner is already verified.");
+
+        VerificationStatus = VerificationStatus.Verified;
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
+    public void Reject()
+    {
+        if (VerificationStatus == VerificationStatus.Rejected)
+            throw new InvalidOperationException("Owner is already rejected.");
+
+        VerificationStatus = VerificationStatus.Rejected;
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateBusinessName(string? businessName)
+    {
+        BusinessName = businessName;
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateCreditCardToken(string? token)
+    {
+        CreditCardToken = token;
+        LastModifiedAt = DateTime.UtcNow;
+    }
 }
 
 public enum VerificationStatus

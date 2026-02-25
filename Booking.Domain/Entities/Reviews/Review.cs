@@ -4,10 +4,10 @@ namespace Booking.Domain.Entities.Reviews;
 
 public class Review
 {
-    public int Id { get; set; } // PK
+    public int Id { get; set; } 
 
-    public int BookingId { get; set; } // FK -> Bookings.Id (int)
-    public Guid GuestId { get; set; }  // FK -> Users.Id (GUID)
+    public int BookingId { get; set; } 
+    public Guid GuestId { get; set; }  
 
     public int Rating { get; set; }
     public string? Comment { get; set; }
