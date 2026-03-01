@@ -1,11 +1,12 @@
 ﻿using MediatR;
 using Booking.Application.Features.Users.Persistence;
 using Booking.Domain.Entities.Users;
+using Booking.Application.Common.Exceptions;
 
 namespace Booking.Application.Features.Users.Register;
 
 public class RegisterUserCommandHandler
-    : IRequestHandler<RegisterUserCommand, Guid>
+    : IRequestHandler<RegisterUserCommand, RegisterUserResponse>
 {
     private readonly IUserRepository _userRepository;
 
@@ -14,32 +15,29 @@ public class RegisterUserCommandHandler
         _userRepository = userRepository;
     }
 
-    public async Task<Guid> Handle(
+    public async Task<RegisterUserResponse> Handle(
         RegisterUserCommand request,
         CancellationToken cancellationToken)
     {
-        var isUnique = await _userRepository.IsEmailUnique(
-            request.UserDto.Email,
-            cancellationToken
-        );
+        var isUnique = await _userRepository
+            .IsEmailUnique(request.Email, cancellationToken);
 
         if (!isUnique)
-            throw new InvalidOperationException("Email already exists.");
+            throw new ConflictException("Email already exists.");
 
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(
-            request.UserDto.Password
-        );
+        var passwordHash = BCrypt.Net.BCrypt
+            .HashPassword(request.Password);
 
         var user = User.CreateUser(
-            request.UserDto.FirstName,
-            request.UserDto.LastName,
-            request.UserDto.Email,
+            request.FirstName,
+            request.LastName,
+            request.Email,
             passwordHash,
-            request.UserDto.PhoneNumber
+            request.PhoneNumber
         );
 
         await _userRepository.AddAsync(user, cancellationToken);
 
-        return user.Id;
+        return new RegisterUserResponse(user.Id);
     }
 }

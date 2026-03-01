@@ -7,20 +7,24 @@ public class RegisterUserCommandValidation
 {
     public RegisterUserCommandValidation()
     {
-        RuleFor(x => x.UserDto.Password)
+        RuleFor(x => x.Password)
             .NotEmpty()
             .MinimumLength(6);
 
-        RuleFor(x => x.UserDto.Email)
+        RuleFor(x => x.Email)
             .NotEmpty()
             .EmailAddress();
 
-        RuleFor(x => x.UserDto.FirstName)
+        RuleFor(x => x.FirstName)
             .NotEmpty()
             .MaximumLength(30);
 
-        RuleFor(x => x.UserDto.LastName)
+        RuleFor(x => x.LastName)
             .NotEmpty()
             .MaximumLength(30);
+
+        RuleFor(x => x.PhoneNumber)
+            .NotEmpty()
+            .MaximumLength(20);
     }
 }
