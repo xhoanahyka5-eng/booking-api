@@ -1,4 +1,4 @@
-﻿namespace Booking.Api.Features.Properties;
+﻿namespace Booking.Application.Features.Properties;
 
 public class SetAvailabilityDto
 {
