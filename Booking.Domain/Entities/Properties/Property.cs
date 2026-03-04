@@ -1,30 +1,36 @@
-﻿using System;
+﻿using Booking.Domain.Entities.Addresses;
 
 namespace Booking.Domain.Entities.Properties;
 
 public class Property
 {
-    public int Id { get; set; } 
+    public int Id { get; set; }
 
-    public Guid OwnerId { get; set; }        
+    public Guid OwnerId { get; set; }
+
     public string Name { get; set; } = string.Empty;
+
     public string? Description { get; set; }
 
-    public PropertyType PropertyType { get; set; } = PropertyType.Apartment;
+    public PropertyType PropertyType { get; set; }
 
-    public int AddressId { get; set; }      
+    public int AddressId { get; set; }
+
+    public Address Address { get; set; } = null!;
 
     public int MaxGuests { get; set; }
+
     public TimeOnly CheckInTime { get; set; }
+
     public TimeOnly CheckOutTime { get; set; }
 
-    public bool IsActive { get; set; } = true;
-    public bool IsApproved { get; set; } = false;
+    public bool IsActive { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsApproved { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
     public DateTime? LastModifiedAt { get; set; }
-
-    public DateTime? LastBookedOnUtc { get; set; }
 }
 
 public enum PropertyType

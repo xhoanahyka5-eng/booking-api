@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Booking.Domain.Entities.Users;   // ✅ KJO ËSHTË E SAKTË
+using Booking.Domain.Entities.Users;  
 
 namespace Booking.Application.Features.Users.Register;
 

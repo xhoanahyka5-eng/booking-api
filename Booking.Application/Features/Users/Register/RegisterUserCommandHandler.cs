@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Booking.Application.Features.Users.Persistence;
 using Booking.Domain.Entities.Users;
+using Booking.Domain.Entities.UserRoles; 
 using Booking.Application.Common.Exceptions;
 
 namespace Booking.Application.Features.Users.Register;
@@ -35,6 +36,15 @@ public class RegisterUserCommandHandler
             passwordHash,
             request.PhoneNumber
         );
+
+        var guestRoleId = await _userRepository
+            .GetRoleIdByNameAsync("Guest", cancellationToken);
+
+        user.UserRoles.Add(new UserRole
+        {
+            UserId = user.Id,
+            RoleId = guestRoleId
+        });
 
         await _userRepository.AddAsync(user, cancellationToken);
 

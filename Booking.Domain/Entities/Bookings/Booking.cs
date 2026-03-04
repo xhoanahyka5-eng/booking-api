@@ -25,7 +25,6 @@ public class Booking
 
     public BookingStatus BookingStatus { get; private set; }
 
-    // 🔥 Rikthe këto
     public DateTime CreatedAt { get; private set; }
     public DateTime? LastModifiedAt { get; private set; }
 

@@ -28,4 +28,15 @@ public class UserRepository
                 .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
+
+    public async Task<Guid> GetRoleIdByNameAsync(string roleName, CancellationToken cancellationToken)
+    {
+        var role = await _context.Roles
+            .FirstOrDefaultAsync(r => r.Name == roleName, cancellationToken);
+
+        if (role is null)
+            throw new Exception($"Role '{roleName}' not found. Seeder should have created it.");
+
+        return role.Id;
+    }
 }

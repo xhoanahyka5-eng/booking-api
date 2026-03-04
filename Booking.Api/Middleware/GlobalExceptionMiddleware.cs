@@ -1,8 +1,6 @@
 ﻿using System.Text.Json;
-using FluentValidation;
 using Booking.Application.Common.Exceptions;
-
-namespace Booking.Api.Middleware;
+using Microsoft.AspNetCore.Mvc;
 
 public class GlobalExceptionMiddleware
 {
@@ -17,7 +15,7 @@ public class GlobalExceptionMiddleware
         _logger = logger;
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
         try
         {
@@ -25,44 +23,59 @@ public class GlobalExceptionMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled Exception");
+            _logger.LogError(ex, ex.Message);
 
-            context.Response.ContentType = "application/json";
-
-            // 1️⃣ FluentValidation (400)
-            if (ex is ValidationException validationException)
-            {
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    errors = validationException.Errors
-                        .Select(e => e.ErrorMessage)
-                });
-
-                return;
-            }
-
-            // 2️⃣ Custom Business Exceptions
-            if (ex is AppException appException)
-            {
-                context.Response.StatusCode = appException.StatusCode;
-
-                await context.Response.WriteAsJsonAsync(new
-                {
-                    message = appException.Message
-                });
-
-                return;
-            }
-
-            // 3️⃣ Unexpected Errors (500)
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-            await context.Response.WriteAsJsonAsync(new
-            {
-                message = "Internal Server Error"
-            });
+            await HandleExceptionAsync(context, ex);
         }
+    }
+
+    private static async Task HandleExceptionAsync(
+        HttpContext context,
+        Exception exception)
+    {
+        var problem = new ProblemDetails
+        {
+            Instance = context.Request.Path,
+            Detail = exception.Message,
+            Extensions =
+            {
+                ["traceId"] = context.TraceIdentifier
+            }
+        };
+
+        switch (exception)
+        {
+            case NotFoundException:
+                problem.Title = "Not Found";
+                problem.Status = StatusCodes.Status404NotFound;
+                break;
+
+            case ConflictException:
+                problem.Title = "Conflict";
+                problem.Status = StatusCodes.Status409Conflict;
+                break;
+
+            case UnauthorizedException:
+                problem.Title = "Unauthorized";
+                problem.Status = StatusCodes.Status401Unauthorized;
+                break;
+
+            case AppException:
+                problem.Title = "Application Error";
+                problem.Status = StatusCodes.Status400BadRequest;
+                break;
+
+            default:
+                problem.Title = "Server Error";
+                problem.Status = StatusCodes.Status500InternalServerError;
+                break;
+        }
+
+        context.Response.StatusCode = problem.Status.Value;
+        context.Response.ContentType = "application/json";
+
+        var json = JsonSerializer.Serialize(problem);
+
+        await context.Response.WriteAsync(json);
     }
 }

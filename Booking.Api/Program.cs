@@ -1,24 +1,43 @@
+using Booking.Api.Features.Properties;
 using Booking.Api.Features.Users;
 using Booking.Api.Middleware;
 using Booking.Application;
 using Booking.Infrastructure;
+using Booking.Infrastructure.Data;
 
-using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+
 builder.Services
-    .AddApplication() // ✅ KJO MUNGON
+    .AddApplication()
     .ConfigurePersistence(builder.Configuration)
     .ConfigureJWT(builder.Configuration);
 
+
 var app = builder.Build();
 
-app.UseCustomMiddlewares();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
+    await DbSeeder.SeedAsync(db);
+}
+
+
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+
 
 app.MapGet("/test-error", () =>
 {
@@ -26,6 +45,5 @@ app.MapGet("/test-error", () =>
 });
 
 app.MapUserEndpoints();
-
-
+app.MapPropertyEndpoints();
 app.Run();

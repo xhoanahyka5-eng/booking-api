@@ -11,14 +11,16 @@ public class OwnerProfile
     public VerificationStatus VerificationStatus { get; private set; }
 
     public string? BusinessName { get; private set; }
+
     public string? CreditCardToken { get; private set; }
 
     public DateTime CreatedAt { get; private set; }
+
     public DateTime? LastModifiedAt { get; private set; }
 
     public User? User { get; private set; }
 
-    private OwnerProfile() { } // Required by EF
+    private OwnerProfile() { }
 
     public OwnerProfile(Guid userId, string identityCardNumber, string? businessName = null)
     {

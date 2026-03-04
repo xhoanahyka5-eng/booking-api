@@ -23,7 +23,7 @@ public class User
     public ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();
     public OwnerProfile? OwnerProfile { get; private set; }
 
-    private User() { } // Required by EF
+    private User() { }
 
     private User(
         string firstName,

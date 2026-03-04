@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Booking.Infrastructure.Migrations
 {
     [DbContext(typeof(BookingDbContext))]
-    [Migration("20260224202144_RestoreBookingAuditFields")]
-    partial class RestoreBookingAuditFields
+    [Migration("20260304133943_InitialClean")]
+    partial class InitialClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -159,6 +159,9 @@ namespace Booking.Infrastructure.Migrations
                     b.Property<int>("AddressId")
                         .HasColumnType("int");
 
+                    b.Property<int>("AddressId1")
+                        .HasColumnType("int");
+
                     b.Property<TimeOnly>("CheckInTime")
                         .HasColumnType("time");
 
@@ -176,9 +179,6 @@ namespace Booking.Infrastructure.Migrations
 
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastBookedOnUtc")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
@@ -200,9 +200,36 @@ namespace Booking.Infrastructure.Migrations
 
                     b.HasIndex("AddressId");
 
-                    b.HasIndex("OwnerId");
+                    b.HasIndex("AddressId1");
 
                     b.ToTable("Properties");
+                });
+
+            modelBuilder.Entity("Booking.Domain.Entities.Properties.PropertyAvailability", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PropertyId");
+
+                    b.ToTable("PropertyAvailabilities");
                 });
 
             modelBuilder.Entity("Booking.Domain.Entities.Reviews.Review", b =>
@@ -352,10 +379,21 @@ namespace Booking.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Booking.Domain.Entities.Users.User", null)
+                    b.HasOne("Booking.Domain.Entities.Addresses.Address", "Address")
                         .WithMany()
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("AddressId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Address");
+                });
+
+            modelBuilder.Entity("Booking.Domain.Entities.Properties.PropertyAvailability", b =>
+                {
+                    b.HasOne("Booking.Domain.Entities.Properties.Property", null)
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

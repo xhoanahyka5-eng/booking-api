@@ -28,7 +28,6 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
     }
 
-
     private SigningCredentials GetSigningCredentials()
     {
         var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
@@ -40,16 +39,24 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     private List<Claim> GetClaims(User user)
     {
         var claims = new List<Claim>
-    {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email),
-        new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+
+          
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
 
         foreach (var userRole in user.UserRoles)
         {
-            claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
+            var roleName = userRole.Role?.Name;
+            if (!string.IsNullOrWhiteSpace(roleName))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, roleName));
+            }
         }
 
         return claims;
