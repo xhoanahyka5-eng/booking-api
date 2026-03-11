@@ -23,6 +23,7 @@ public static class DbSeeder
         CancellationToken ct)
     {
         var exists = await context.Roles.AnyAsync(r => r.Name == name, ct);
+
         if (exists) return;
 
         context.Roles.Add(new Role

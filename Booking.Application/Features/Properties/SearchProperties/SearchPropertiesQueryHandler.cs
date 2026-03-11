@@ -1,5 +1,4 @@
-﻿using Booking.Application.Features.Properties.GetAllProperties;
-using Booking.Application.Features.Properties.Persistence;
+﻿using Booking.Application.Features.Properties.Persistence;
 using MediatR;
 
 namespace Booking.Application.Features.Properties.SearchProperties;
@@ -22,15 +21,31 @@ public class SearchPropertiesQueryHandler
             request.City,
             request.Guests,
             request.Date,
+            request.PropertyType,
+            request.MinPrice,
+            request.MaxPrice,
             cancellationToken);
 
         return properties.Select(p => new PropertyDto
         {
             Id = p.Id,
+            OwnerId = p.OwnerId,
             Name = p.Name,
             Description = p.Description,
+            Amenities = p.Amenities,
+            Rules = p.Rules,
+            PropertyType = p.PropertyType.ToString(),
+            Country = p.Address.Country,
             City = p.Address.City,
-            MaxGuests = p.MaxGuests
+            Street = p.Address.Street,
+            PostalCode = p.Address.PostalCode,
+            MaxGuests = p.MaxGuests,
+            CheckInTime = p.CheckInTime,
+            CheckOutTime = p.CheckOutTime,
+            IsActive = p.IsActive,
+            IsApproved = p.IsApproved,
+            CreatedAt = p.CreatedAt,
+            LastModifiedAt = p.LastModifiedAt
         }).ToList();
     }
 }

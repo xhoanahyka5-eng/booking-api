@@ -1,28 +1,44 @@
-﻿using BookingEntity = Booking.Domain.Entities.Bookings.Booking;
+﻿using Booking.Application.Features.Bookings.GetHostBookings;
+using Booking.Application.Features.Bookings.GetMyBookings;
+using Booking.Domain.Entities.Bookings;
+using BookingEntity = Booking.Domain.Entities.Bookings.Booking;
 using PropertyEntity = Booking.Domain.Entities.Properties.Property;
 
 namespace Booking.Application.Features.Bookings.Persistence;
 
 public interface IBookingRepository
 {
-    Task<PropertyEntity?> GetPropertyWithAvailabilityAsync(
+    Task<int> AddBookingAsync(BookingEntity booking, CancellationToken cancellationToken);
+
+    Task<BookingEntity?> GetBookingByIdAsync(int bookingId, CancellationToken cancellationToken);
+
+    Task<PropertyEntity?> GetPropertyWithAvailabilityAsync(int propertyId, CancellationToken cancellationToken);
+
+    Task<Guid?> GetPropertyOwnerIdAsync(int propertyId, CancellationToken cancellationToken);
+
+    Task BlockAvailabilityAsync(
         int propertyId,
-        CancellationToken cancellationToken);
-
-    Task<BookingEntity?> GetBookingByIdAsync(
-        int bookingId,
-        CancellationToken cancellationToken);
-
-    Task<int> AddBookingAsync(
-        BookingEntity booking,
-        CancellationToken cancellationToken);
-
-    Task SaveChangesAsync(
+        DateOnly startDate,
+        DateOnly endDate,
         CancellationToken cancellationToken);
 
     Task RestoreAvailabilityAsync(
-    int propertyId,
-    DateOnly startDate,
-    DateOnly endDate,
-    CancellationToken cancellationToken);
+        int propertyId,
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken cancellationToken);
+
+    Task<List<MyBookingDto>> GetGuestBookingsAsync(
+        Guid guestId,
+        BookingStatus? status,
+        string? scope,
+        CancellationToken cancellationToken);
+
+    Task<List<HostBookingDto>> GetHostBookingsAsync(
+        Guid hostId,
+        BookingStatus? status,
+        string? scope,
+        CancellationToken cancellationToken);
+
+    Task SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -1,7 +1,7 @@
-﻿using Booking.Application.Abstractions.Authentication;
-using Booking.Application.Features.Properties.Persistence;
-using Booking.Application.Features.Properties.Users.Persistence;
+using Booking.Application.Abstractions.Authentication;
 using Booking.Application.Features.Bookings.Persistence;
+using Booking.Application.Features.Properties.Persistence;
+using Booking.Application.Features.Users.Persistence;
 using Booking.Infrastructure.Authentication;
 using Booking.Infrastructure.Data;
 using Booking.Infrastructure.Persistence;
@@ -12,6 +12,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Booking.Application.Features.Reviews.Persistence;
+using Booking.Infrastructure.Persistence;
+
+namespace Booking.Infrastructure;
 
 public static class InfrastructureRegistration
 {
@@ -26,12 +30,10 @@ public static class InfrastructureRegistration
         );
 
         services.AddScoped<IUserRepository, UserRepository>();
-
         services.AddScoped<IPropertyRepository, PropertyRepository>();
-
         services.AddScoped<IBookingRepository, BookingRepository>();
-
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IReviewRepository, ReviewRepository>();
 
         return services;
     }
@@ -68,15 +70,12 @@ public static class InfrastructureRegistration
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-
                     ValidIssuer = jwtSettings.Issuer,
                     ValidAudience = jwtSettings.Audience,
-
                     IssuerSigningKey =
                         new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(jwtSettings.SecretKey)
                         ),
-
                     ClockSkew = TimeSpan.Zero
                 };
         });

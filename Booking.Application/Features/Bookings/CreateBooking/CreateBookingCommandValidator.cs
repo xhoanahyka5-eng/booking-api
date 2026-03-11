@@ -2,7 +2,8 @@
 
 namespace Booking.Application.Features.Bookings.CreateBooking;
 
-public class CreateBookingCommandValidator : AbstractValidator<CreateBookingCommand>
+public class CreateBookingCommandValidator
+    : AbstractValidator<CreateBookingCommand>
 {
     public CreateBookingCommandValidator()
     {
@@ -16,10 +17,13 @@ public class CreateBookingCommandValidator : AbstractValidator<CreateBookingComm
             .GreaterThan(0).WithMessage("GuestCount must be greater than 0.");
 
         RuleFor(x => x.StartDate)
-            .NotEmpty().WithMessage("Start date is required.");
+            .NotEmpty().WithMessage("StartDate is required.");
 
         RuleFor(x => x.EndDate)
-            .NotEmpty().WithMessage("End date is required.")
-            .GreaterThan(x => x.StartDate).WithMessage("End date must be after start date.");
+            .NotEmpty().WithMessage("EndDate is required.");
+
+        RuleFor(x => x)
+            .Must(x => x.EndDate > x.StartDate)
+            .WithMessage("EndDate must be after StartDate.");
     }
 }

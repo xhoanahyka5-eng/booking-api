@@ -1,5 +1,6 @@
-﻿using Booking.Application.Features.Properties.Persistence;
-using Booking.Domain.Entities.Addresses;
+﻿using Booking.Application.Common.Exceptions;
+using Booking.Application.Features.Properties.Persistence;
+using Booking.Application.Features.Users.Persistence;
 using Booking.Domain.Entities.Properties;
 using MediatR;
 
@@ -9,34 +10,51 @@ public class CreatePropertyCommandHandler
     : IRequestHandler<CreatePropertyCommand, int>
 {
     private readonly IPropertyRepository _repo;
+    private readonly IUserRepository _userRepository;
 
-    public CreatePropertyCommandHandler(IPropertyRepository repo)
+    public CreatePropertyCommandHandler(
+        IPropertyRepository repo,
+        IUserRepository userRepository)
     {
         _repo = repo;
+        _userRepository = userRepository;
     }
 
     public async Task<int> Handle(CreatePropertyCommand request, CancellationToken ct)
     {
-        // 1️⃣ Krijo Address
-        var address = new Address
-        {
-            Country = request.Country,
-            City = request.City,
-            Street = request.Street,
-            PostalCode = request.PostalCode
-        };
+        var user = await _userRepository.GetByIdWithRolesAsync(request.OwnerId, ct);
 
-        // 2️⃣ Ruaj Address në DB
-        await _repo.AddAddress(address, ct);
+        if (user is null)
+            throw new NotFoundException("User not found.");
 
-        // 3️⃣ Konverto PropertyType nga string në enum
-        var propertyType = Enum.Parse<PropertyType>(request.PropertyType);
+        var isHostOrAdmin = user.UserRoles.Any(ur =>
+            ur.Role != null &&
+            (ur.Role.Name == "Host" || ur.Role.Name == "Admin"));
 
-        // 4️⃣ Krijo Property
+        if (!isHostOrAdmin)
+            throw new UnauthorizedException("Only Host or Admin can create properties.");
+
+        var propertyTypeText = Normalize(request.PropertyType);
+
+        if (!Enum.TryParse<PropertyType>(propertyTypeText, true, out var propertyType))
+            throw new ConflictException("Invalid property type.");
+
+        var country = Normalize(request.Country);
+        var city = Normalize(request.City);
+        var street = Normalize(request.Street);
+        var postalCode = Normalize(request.PostalCode);
+
+        var address = await _repo.GetOrCreateAddressAsync(
+            country,
+            city,
+            street,
+            postalCode,
+            ct);
+
         var property = new Property(
             request.OwnerId,
-            request.Name,
-            request.Description,
+            Normalize(request.Name),
+            NormalizeNullable(request.Description),
             propertyType,
             request.MaxGuests,
             request.CheckInTime,
@@ -44,7 +62,20 @@ public class CreatePropertyCommandHandler
             address.Id
         );
 
-        // 5️⃣ Ruaj Property
         return await _repo.CreateProperty(property, ct);
+    }
+
+    private static string Normalize(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : value.Trim();
+    }
+
+    private static string? NormalizeNullable(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
     }
 }

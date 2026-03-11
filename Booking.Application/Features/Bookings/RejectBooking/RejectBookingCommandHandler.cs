@@ -13,7 +13,9 @@ public class RejectBookingCommandHandler : IRequestHandler<RejectBookingCommand>
         _bookingRepository = bookingRepository;
     }
 
-    public async Task Handle(RejectBookingCommand request, CancellationToken cancellationToken)
+    public async Task Handle(
+        RejectBookingCommand request,
+        CancellationToken cancellationToken)
     {
         var booking = await _bookingRepository.GetBookingByIdAsync(
             request.BookingId,
@@ -21,6 +23,16 @@ public class RejectBookingCommandHandler : IRequestHandler<RejectBookingCommand>
 
         if (booking is null)
             throw new NotFoundException("Booking not found.");
+
+        var ownerId = await _bookingRepository.GetPropertyOwnerIdAsync(
+            booking.PropertyId,
+            cancellationToken);
+
+        if (ownerId is null)
+            throw new NotFoundException("Property not found.");
+
+        if (ownerId.Value != request.HostId)
+            throw new UnauthorizedException("You are not allowed to reject this booking.");
 
         try
         {

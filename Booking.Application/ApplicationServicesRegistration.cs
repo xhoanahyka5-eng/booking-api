@@ -1,7 +1,6 @@
-﻿using System.Reflection;
+using System.Reflection;
 using AutoMapper;
 using Booking.Application.Behaviors;
-using Booking.Application.Features.Bookings.CreateBooking;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +11,7 @@ public static class ApplicationServicesRegistration
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        Assembly assembly = typeof(ApplicationServicesRegistration).Assembly;
+        var assembly = typeof(ApplicationServicesRegistration).Assembly;
 
         services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(assembly));
@@ -22,8 +21,6 @@ public static class ApplicationServicesRegistration
         services.AddAutoMapper(assembly);
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-
-        services.AddTransient<IRequestHandler<CreateBookingCommand, int>, CreateBookingCommandHandler>();
 
         return services;
     }

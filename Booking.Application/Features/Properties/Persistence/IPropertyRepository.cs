@@ -15,13 +15,40 @@ public interface IPropertyRepository
 
     Task<int> CreateProperty(Property property, CancellationToken ct);
 
+    Task<Address> GetOrCreateAddressAsync(
+        string country,
+        string city,
+        string street,
+        string postalCode,
+        CancellationToken ct);
+
     Task<Property?> GetPropertyById(int propertyId, CancellationToken ct);
+
+    Task<Property?> GetPropertyWithAvailabilityAsync(int propertyId, CancellationToken ct);
+
+    Task<Property?> GetPropertyWithPhotosAsync(int propertyId, CancellationToken ct);
+
+    Task AddPhotoAsync(PropertyPhoto photo, CancellationToken ct);
+
+    Task<List<PropertyPhoto>> GetPhotosByPropertyIdAsync(int propertyId, CancellationToken ct);
+
+    Task UpsertAvailabilityAsync(
+        int propertyId,
+        DateOnly date,
+        decimal price,
+        bool isAvailable,
+        CancellationToken ct);
 
     Task SaveChanges(CancellationToken ct);
 
     Task<List<Property>> GetAllAsync(CancellationToken ct);
 
-    Task AddAddress(Address address, CancellationToken ct);
-
-    Task<List<Property>> SearchAsync(string city, int guests, DateOnly date, CancellationToken ct);
+    Task<List<Property>> SearchAsync(
+        string city,
+        int guests,
+        DateOnly date,
+        string? propertyType,
+        decimal? minPrice,
+        decimal? maxPrice,
+        CancellationToken ct);
 }

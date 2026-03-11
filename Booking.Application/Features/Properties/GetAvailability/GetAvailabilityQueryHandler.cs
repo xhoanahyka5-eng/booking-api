@@ -1,11 +1,10 @@
 ﻿using Booking.Application.Features.Properties.Persistence;
-using Booking.Domain.Entities.Properties;
 using MediatR;
 
 namespace Booking.Application.Features.Properties.GetAvailability;
 
 public class GetAvailabilityQueryHandler
-    : IRequestHandler<GetAvailabilityQuery, List<PropertyAvailability>>
+    : IRequestHandler<GetAvailabilityQuery, List<AvailabilityDto>>
 {
     private readonly IPropertyRepository _repository;
 
@@ -14,13 +13,22 @@ public class GetAvailabilityQueryHandler
         _repository = repository;
     }
 
-    public async Task<List<PropertyAvailability>> Handle(
+    public async Task<List<AvailabilityDto>> Handle(
         GetAvailabilityQuery request,
         CancellationToken cancellationToken)
     {
-        return await _repository.GetAvailabilityByPropertyId(
+        var availability = await _repository.GetAvailabilityByPropertyId(
             request.PropertyId,
             cancellationToken
         );
+
+        return availability
+            .Select(a => new AvailabilityDto
+            {
+                Date = a.Date,
+                Price = a.Price,
+                IsAvailable = a.IsAvailable
+            })
+            .ToList();
     }
 }

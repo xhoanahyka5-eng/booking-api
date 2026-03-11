@@ -1,5 +1,4 @@
-﻿using Booking.Application.Abstractions.Persistence;
-using Booking.Application.Features.Properties.Users.Persistence;
+﻿using Booking.Application.Features.Users.Persistence;
 using Booking.Domain.Entities.OwnerProfiles;
 using Booking.Domain.Entities.UserRoles;
 using Booking.Domain.Entities.Users;

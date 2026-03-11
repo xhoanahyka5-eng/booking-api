@@ -1,7 +1,9 @@
-﻿using Booking.Application.Features.Bookings.CreateBooking;
+﻿using Booking.Application.Features.Bookings.CancelBooking;
 using Booking.Application.Features.Bookings.ConfirmBooking;
+using Booking.Application.Features.Bookings.CreateBooking;
+using Booking.Application.Features.Bookings.GetHostBookings;
+using Booking.Application.Features.Bookings.GetMyBookings;
 using Booking.Application.Features.Bookings.RejectBooking;
-using Booking.Application.Features.Bookings.CancelBooking;
 using MediatR;
 using System.Security.Claims;
 
@@ -19,10 +21,15 @@ public static class BookingEndpoints
                 CancellationToken ct
             ) =>
             {
-                var userIdStr = http.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userIdStr =
+                    http.User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                    http.User.FindFirst("sub")?.Value;
 
-                if (string.IsNullOrWhiteSpace(userIdStr) || !Guid.TryParse(userIdStr, out var guestId))
+                if (string.IsNullOrWhiteSpace(userIdStr) ||
+                    !Guid.TryParse(userIdStr, out var guestId))
+                {
                     return Results.Unauthorized();
+                }
 
                 var command = new CreateBookingCommand(
                     guestId,
@@ -38,45 +45,137 @@ public static class BookingEndpoints
             })
             .RequireAuthorization();
 
-
         app.MapPost("/api/v1/bookings/{id}/confirm",
             async (
                 int id,
+                HttpContext http,
                 ISender sender,
                 CancellationToken ct
             ) =>
             {
-                await sender.Send(new ConfirmBookingCommand(id), ct);
+                var userIdStr =
+                    http.User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                    http.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrWhiteSpace(userIdStr) ||
+                    !Guid.TryParse(userIdStr, out var hostId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                await sender.Send(new ConfirmBookingCommand(id, hostId), ct);
 
                 return Results.Ok();
             })
             .RequireAuthorization();
-
 
         app.MapPost("/api/v1/bookings/{id}/reject",
             async (
                 int id,
+                HttpContext http,
                 ISender sender,
                 CancellationToken ct
             ) =>
             {
-                await sender.Send(new RejectBookingCommand(id), ct);
+                var userIdStr =
+                    http.User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                    http.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrWhiteSpace(userIdStr) ||
+                    !Guid.TryParse(userIdStr, out var hostId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                await sender.Send(new RejectBookingCommand(id, hostId), ct);
 
                 return Results.Ok();
             })
             .RequireAuthorization();
 
-
         app.MapPost("/api/v1/bookings/{id}/cancel",
             async (
                 int id,
+                HttpContext http,
                 ISender sender,
                 CancellationToken ct
             ) =>
             {
-                await sender.Send(new CancelBookingCommand(id), ct);
+                var userIdStr =
+                    http.User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                    http.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrWhiteSpace(userIdStr) ||
+                    !Guid.TryParse(userIdStr, out var guestId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                await sender.Send(new CancelBookingCommand(id, guestId), ct);
 
                 return Results.Ok();
+            })
+            .RequireAuthorization();
+
+        app.MapGet("/api/v1/bookings/my",
+            async (
+                string? status,
+                string? scope,
+                HttpContext http,
+                ISender sender,
+                CancellationToken ct
+            ) =>
+            {
+                var userIdStr =
+                    http.User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                    http.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrWhiteSpace(userIdStr) ||
+                    !Guid.TryParse(userIdStr, out var guestId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var query = new GetMyBookingsQuery(
+                    guestId,
+                    status,
+                    scope
+                );
+
+                var result = await sender.Send(query, ct);
+
+                return Results.Ok(result);
+            })
+            .RequireAuthorization();
+
+        app.MapGet("/api/v1/bookings/host",
+            async (
+                string? status,
+                string? scope,
+                HttpContext http,
+                ISender sender,
+                CancellationToken ct
+            ) =>
+            {
+                var userIdStr =
+                    http.User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                    http.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrWhiteSpace(userIdStr) ||
+                    !Guid.TryParse(userIdStr, out var hostId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var query = new GetHostBookingsQuery(
+                    hostId,
+                    status,
+                    scope
+                );
+
+                var result = await sender.Send(query, ct);
+
+                return Results.Ok(result);
             })
             .RequireAuthorization();
     }

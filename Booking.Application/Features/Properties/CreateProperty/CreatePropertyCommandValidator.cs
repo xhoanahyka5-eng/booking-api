@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using Booking.Domain.Entities.Properties;
+using FluentValidation;
 
 namespace Booking.Application.Features.Properties.CreateProperty;
 
@@ -19,31 +20,23 @@ public class CreatePropertyCommandValidator
             .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
 
         RuleFor(x => x.PropertyType)
-            .NotEmpty().WithMessage("Property type is required.");
+            .NotEmpty().WithMessage("Property type is required.")
+            .Must(x => Enum.TryParse<PropertyType>(x, true, out _))
+            .WithMessage("Invalid property type.");
 
         RuleFor(x => x.MaxGuests)
             .GreaterThan(0).WithMessage("MaxGuests must be greater than 0.");
 
-        RuleFor(x => x.CheckInTime)
-            .NotEmpty().WithMessage("Check-in time is required.");
-
-        RuleFor(x => x.CheckOutTime)
-            .NotEmpty().WithMessage("Check-out time is required.");
-
         RuleFor(x => x.Country)
-            .NotEmpty().WithMessage("Country is required.")
-            .MaximumLength(100).WithMessage("Country cannot exceed 100 characters.");
+            .NotEmpty().WithMessage("Country is required.");
 
         RuleFor(x => x.City)
-            .NotEmpty().WithMessage("City is required.")
-            .MaximumLength(100).WithMessage("City cannot exceed 100 characters.");
+            .NotEmpty().WithMessage("City is required.");
 
         RuleFor(x => x.Street)
-            .NotEmpty().WithMessage("Street is required.")
-            .MaximumLength(200).WithMessage("Street cannot exceed 200 characters.");
+            .NotEmpty().WithMessage("Street is required.");
 
         RuleFor(x => x.PostalCode)
-            .NotEmpty().WithMessage("Postal code is required.")
-            .MaximumLength(20).WithMessage("Postal code cannot exceed 20 characters.");
+            .NotEmpty().WithMessage("Postal code is required.");
     }
 }

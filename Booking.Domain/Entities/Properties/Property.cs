@@ -12,6 +12,10 @@ public class Property
 
     public string? Description { get; private set; }
 
+    public string? Amenities { get; private set; }
+
+    public string? Rules { get; private set; }
+
     public PropertyType PropertyType { get; private set; }
 
     public int AddressId { get; private set; }
@@ -35,11 +39,11 @@ public class Property
     public ICollection<PropertyAvailability> Availabilities { get; private set; }
         = new List<PropertyAvailability>();
 
+    public ICollection<PropertyPhoto> Photos { get; private set; }
+        = new List<PropertyPhoto>();
 
-    // Constructor bosh për EF Core
     private Property() { }
 
-    // Constructor për krijimin e Property
     public Property(
         Guid ownerId,
         string name,
@@ -64,8 +68,6 @@ public class Property
         CreatedAt = DateTime.UtcNow;
     }
 
-
-    // Shton availability për një datë
     public void AddAvailability(DateOnly date, decimal price, bool isAvailable)
     {
         Availabilities.Add(new PropertyAvailability
@@ -79,8 +81,6 @@ public class Property
         LastModifiedAt = DateTime.UtcNow;
     }
 
-
-    // Update property
     public void UpdateDetails(
         string name,
         string? description,
@@ -97,23 +97,38 @@ public class Property
         LastModifiedAt = DateTime.UtcNow;
     }
 
+    public void UpdateAmenitiesAndRules(string? amenities, string? rules)
+    {
+        Amenities = amenities;
+        Rules = rules;
 
-    // Aktivizim / deaktivizim
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
+    public void ChangePropertyType(PropertyType propertyType)
+    {
+        PropertyType = propertyType;
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
+    public void ChangeAddress(int addressId)
+    {
+        AddressId = addressId;
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
     public void SetActive(bool active)
     {
         IsActive = active;
         LastModifiedAt = DateTime.UtcNow;
     }
 
-
-    // Aprovim nga admin
     public void Approve()
     {
         IsApproved = true;
         LastModifiedAt = DateTime.UtcNow;
     }
 }
-
 
 public enum PropertyType
 {

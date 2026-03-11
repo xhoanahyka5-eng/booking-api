@@ -37,11 +37,13 @@ public class Booking
 
     public Booking(int propertyId, Guid guestId, DateOnly start, DateOnly end, int guestCount)
     {
+
         if (end <= start)
             throw new ArgumentException("End date must be after start date.");
 
         if (guestCount <= 0)
             throw new ArgumentException("Guest count must be greater than zero.");
+
 
         PropertyId = propertyId;
         GuestId = guestId;
@@ -64,6 +66,7 @@ public class Booking
         LastModifiedAt = DateTime.UtcNow;
     }
 
+
     public void Confirm()
     {
         if (BookingStatus != BookingStatus.Pending)
@@ -73,6 +76,7 @@ public class Booking
         ConfirmedOnUtc = DateTime.UtcNow;
         LastModifiedAt = DateTime.UtcNow;
     }
+
 
     public void Reject()
     {
@@ -94,6 +98,7 @@ public class Booking
         CancelledOnUtc = DateTime.UtcNow;
         LastModifiedAt = DateTime.UtcNow;
     }
+
 }
 
 public enum BookingStatus

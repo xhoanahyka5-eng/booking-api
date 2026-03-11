@@ -5,7 +5,8 @@ using BookingEntity = Booking.Domain.Entities.Bookings.Booking;
 
 namespace Booking.Application.Features.Bookings.CreateBooking;
 
-public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand, int>
+public class CreateBookingCommandHandler
+    : IRequestHandler<CreateBookingCommand, int>
 {
     private readonly IBookingRepository _bookingRepository;
 
@@ -14,7 +15,9 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
         _bookingRepository = bookingRepository;
     }
 
-    public async Task<int> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
+    public async Task<int> Handle(
+        CreateBookingCommand request,
+        CancellationToken cancellationToken)
     {
         var property = await _bookingRepository.GetPropertyWithAvailabilityAsync(
             request.PropertyId,
@@ -26,16 +29,19 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
         if (request.GuestCount > property.MaxGuests)
             throw new ConflictException("Guest count exceeds property capacity.");
 
-        var requestedDates = GetDatesInRange(request.StartDate, request.EndDate);
+        var requestedDates = Enumerable
+            .Range(0, request.EndDate.DayNumber - request.StartDate.DayNumber)
+            .Select(offset => request.StartDate.AddDays(offset))
+            .ToList();
 
-        var availableEntries = property.Availabilities
+        var availableDates = property.Availabilities
             .Where(a => requestedDates.Contains(a.Date) && a.IsAvailable)
             .ToList();
 
-        if (availableEntries.Count != requestedDates.Count)
-            throw new ConflictException("Property is not available for all selected dates.");
+        if (availableDates.Count != requestedDates.Count)
+            throw new ConflictException("Selected dates are not fully available.");
 
-        var priceForPeriod = availableEntries.Sum(a => a.Price);
+        var totalPrice = availableDates.Sum(x => x.Price);
 
         var booking = new BookingEntity(
             request.PropertyId,
@@ -45,31 +51,8 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
             request.GuestCount
         );
 
-        booking.SetPricing(priceForPeriod, 0, 0);
-        booking.Confirm();
+        booking.SetPricing(totalPrice);
 
-        foreach (var availability in availableEntries)
-        {
-            availability.IsAvailable = false;
-        }
-
-        var bookingId = await _bookingRepository.AddBookingAsync(booking, cancellationToken);
-        await _bookingRepository.SaveChangesAsync(cancellationToken);
-
-        return bookingId;
-    }
-
-    private static List<DateOnly> GetDatesInRange(DateOnly startDate, DateOnly endDate)
-    {
-        var dates = new List<DateOnly>();
-        var current = startDate;
-
-        while (current < endDate)
-        {
-            dates.Add(current);
-            current = current.AddDays(1);
-        }
-
-        return dates;
+        return await _bookingRepository.AddBookingAsync(booking, cancellationToken);
     }
 }

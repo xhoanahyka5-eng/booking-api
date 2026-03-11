@@ -1,6 +1,9 @@
-﻿using System.Security.Claims;
+﻿using Booking.Application.Abstractions.Authentication;
+using Booking.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Http;
-using Booking.Application.Abstractions;
+using System.Security.Claims;
+
+namespace Booking.Infrastructure.Authentication;
 
 public class CurrentUserService : ICurrentUserService
 {
@@ -15,12 +18,16 @@ public class CurrentUserService : ICurrentUserService
     {
         get
         {
-            var userId = _httpContextAccessor
-                .HttpContext?
-                .User?
-                .FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = _httpContextAccessor.HttpContext?.User;
 
-            return Guid.Parse(userId!);
+            var userId =
+                user?.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                user?.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out var parsedUserId))
+                throw new UnauthorizedException("User is not authenticated.");
+
+            return parsedUserId;
         }
     }
 }
