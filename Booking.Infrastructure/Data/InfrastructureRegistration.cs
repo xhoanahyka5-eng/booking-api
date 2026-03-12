@@ -1,19 +1,17 @@
 using Booking.Application.Abstractions.Authentication;
 using Booking.Application.Features.Bookings.Persistence;
 using Booking.Application.Features.Properties.Persistence;
+using Booking.Application.Features.Reviews.Persistence;
 using Booking.Application.Features.Users.Persistence;
 using Booking.Infrastructure.Authentication;
 using Booking.Infrastructure.Data;
 using Booking.Infrastructure.Persistence;
-using Booking.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Booking.Application.Features.Reviews.Persistence;
-using Booking.Infrastructure.Persistence;
 
 namespace Booking.Infrastructure;
 

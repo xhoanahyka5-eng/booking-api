@@ -1,4 +1,4 @@
-﻿using Booking.Application.Features.Properties;
+﻿using Booking.Application.Common.Models;
 using MediatR;
 
 namespace Booking.Application.Features.Properties.SearchProperties;
@@ -9,5 +9,7 @@ public record SearchPropertiesQuery(
     DateOnly Date,
     string? PropertyType,
     decimal? MinPrice,
-    decimal? MaxPrice
-) : IRequest<List<PropertyDto>>;
+    decimal? MaxPrice,
+    int PageNumber = 1,
+    int PageSize = 10
+) : IRequest<PagedResult<PropertyDto>>;

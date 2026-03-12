@@ -1,4 +1,5 @@
 ﻿using Booking.Application.Common.Exceptions;
+using Booking.Application.Common.Models;
 using Booking.Application.Features.Bookings.Persistence;
 using Booking.Domain.Entities.Bookings;
 using MediatR;
@@ -6,7 +7,7 @@ using MediatR;
 namespace Booking.Application.Features.Bookings.GetMyBookings;
 
 public class GetMyBookingsQueryHandler
-    : IRequestHandler<GetMyBookingsQuery, List<MyBookingDto>>
+    : IRequestHandler<GetMyBookingsQuery, PagedResult<MyBookingDto>>
 {
     private readonly IBookingRepository _bookingRepository;
 
@@ -15,7 +16,7 @@ public class GetMyBookingsQueryHandler
         _bookingRepository = bookingRepository;
     }
 
-    public async Task<List<MyBookingDto>> Handle(
+    public async Task<PagedResult<MyBookingDto>> Handle(
         GetMyBookingsQuery request,
         CancellationToken cancellationToken)
     {
@@ -29,10 +30,26 @@ public class GetMyBookingsQueryHandler
             parsedStatus = status;
         }
 
-        return await _bookingRepository.GetGuestBookingsAsync(
+        var pageNumber = request.PageNumber < 1 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize < 1 ? 10 : request.PageSize > 50 ? 50 : request.PageSize;
+
+        var (items, totalCount) = await _bookingRepository.GetGuestBookingsPagedAsync(
             request.GuestId,
             parsedStatus,
             request.Scope,
+            pageNumber,
+            pageSize,
             cancellationToken);
+
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        return new PagedResult<MyBookingDto>
+        {
+            Items = items,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
     }
 }

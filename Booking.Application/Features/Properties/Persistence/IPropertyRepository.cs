@@ -43,6 +43,11 @@ public interface IPropertyRepository
 
     Task<List<Property>> GetAllAsync(CancellationToken ct);
 
+    Task<(List<Property> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct);
+
     Task<List<Property>> SearchAsync(
         string city,
         int guests,
@@ -51,4 +56,16 @@ public interface IPropertyRepository
         decimal? minPrice,
         decimal? maxPrice,
         CancellationToken ct);
+
+
+    Task<(List<Property> Items, int TotalCount)> SearchPagedAsync(
+    string city,
+    int guests,
+    DateOnly date,
+    string? propertyType,
+    decimal? minPrice,
+    decimal? maxPrice,
+    int pageNumber,
+    int pageSize,
+    CancellationToken ct);
 }

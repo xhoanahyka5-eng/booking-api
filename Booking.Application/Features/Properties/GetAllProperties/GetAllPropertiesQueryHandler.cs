@@ -1,10 +1,11 @@
-﻿using Booking.Application.Features.Properties.Persistence;
+﻿using Booking.Application.Common.Models;
+using Booking.Application.Features.Properties.Persistence;
 using MediatR;
 
 namespace Booking.Application.Features.Properties.GetAllProperties;
 
 public class GetAllPropertiesQueryHandler
-    : IRequestHandler<GetAllPropertiesQuery, List<PropertyDto>>
+    : IRequestHandler<GetAllPropertiesQuery, PagedResult<PropertyDto>>
 {
     private readonly IPropertyRepository _propertyRepository;
 
@@ -13,13 +14,19 @@ public class GetAllPropertiesQueryHandler
         _propertyRepository = propertyRepository;
     }
 
-    public async Task<List<PropertyDto>> Handle(
+    public async Task<PagedResult<PropertyDto>> Handle(
         GetAllPropertiesQuery request,
         CancellationToken cancellationToken)
     {
-        var properties = await _propertyRepository.GetAllAsync(cancellationToken);
+        var pageNumber = request.PageNumber < 1 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize < 1 ? 10 : request.PageSize > 50 ? 50 : request.PageSize;
 
-        return properties.Select(p => new PropertyDto
+        var (properties, totalCount) = await _propertyRepository.GetPagedAsync(
+            pageNumber,
+            pageSize,
+            cancellationToken);
+
+        var items = properties.Select(p => new PropertyDto
         {
             Id = p.Id,
             OwnerId = p.OwnerId,
@@ -40,5 +47,16 @@ public class GetAllPropertiesQueryHandler
             CreatedAt = p.CreatedAt,
             LastModifiedAt = p.LastModifiedAt
         }).ToList();
+
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        return new PagedResult<PropertyDto>
+        {
+            Items = items,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
     }
 }

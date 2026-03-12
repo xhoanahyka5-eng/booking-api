@@ -123,7 +123,9 @@ public static class BookingEndpoints
                 string? scope,
                 HttpContext http,
                 ISender sender,
-                CancellationToken ct
+                CancellationToken ct,
+                int pageNumber = 1,
+                int pageSize = 10
             ) =>
             {
                 var userIdStr =
@@ -139,7 +141,9 @@ public static class BookingEndpoints
                 var query = new GetMyBookingsQuery(
                     guestId,
                     status,
-                    scope
+                    scope,
+                    pageNumber,
+                    pageSize
                 );
 
                 var result = await sender.Send(query, ct);
@@ -154,7 +158,9 @@ public static class BookingEndpoints
                 string? scope,
                 HttpContext http,
                 ISender sender,
-                CancellationToken ct
+                CancellationToken ct,
+                int pageNumber = 1,
+                int pageSize = 10
             ) =>
             {
                 var userIdStr =
@@ -170,7 +176,9 @@ public static class BookingEndpoints
                 var query = new GetHostBookingsQuery(
                     hostId,
                     status,
-                    scope
+                    scope,
+                    pageNumber,
+                    pageSize
                 );
 
                 var result = await sender.Send(query, ct);

@@ -1,9 +1,9 @@
 ﻿using Booking.Application.Features.Bookings.GetHostBookings;
 using Booking.Application.Features.Bookings.GetMyBookings;
 using Booking.Application.Features.Bookings.Persistence;
+using Booking.Domain.Entities.Bookings;
 using Booking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Booking.Domain.Entities.Bookings;
 
 using BookingEntity = Booking.Domain.Entities.Bookings.Booking;
 using PropertyEntity = Booking.Domain.Entities.Properties.Property;
@@ -97,10 +97,12 @@ public class BookingRepository : IBookingRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<List<MyBookingDto>> GetGuestBookingsAsync(
+    public async Task<(List<MyBookingDto> Items, int TotalCount)> GetGuestBookingsPagedAsync(
         Guid guestId,
         BookingStatus? status,
         string? scope,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -148,15 +150,24 @@ public class BookingRepository : IBookingRepository
             }
         }
 
-        return await query
-            .OrderByDescending(x => x.CreatedAt)
+        query = query.OrderByDescending(x => x.CreatedAt);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 
-    public async Task<List<HostBookingDto>> GetHostBookingsAsync(
+    public async Task<(List<HostBookingDto> Items, int TotalCount)> GetHostBookingsPagedAsync(
         Guid hostId,
         BookingStatus? status,
         string? scope,
+        int pageNumber,
+        int pageSize,
         CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -203,9 +214,16 @@ public class BookingRepository : IBookingRepository
             }
         }
 
-        return await query
-            .OrderByDescending(x => x.CreatedAt)
+        query = query.OrderByDescending(x => x.CreatedAt);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)

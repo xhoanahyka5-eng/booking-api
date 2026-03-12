@@ -273,7 +273,9 @@ public static class PropertyEndpoints
                 decimal? minPrice,
                 decimal? maxPrice,
                 ISender sender,
-                CancellationToken ct
+                CancellationToken ct,
+                int pageNumber = 1,
+                int pageSize = 10
             ) =>
             {
                 var query = new SearchPropertiesQuery(
@@ -282,7 +284,9 @@ public static class PropertyEndpoints
                     date,
                     propertyType,
                     minPrice,
-                    maxPrice
+                    maxPrice,
+                    pageNumber,
+                    pageSize
                 );
 
                 var result = await sender.Send(query, ct);
@@ -293,10 +297,12 @@ public static class PropertyEndpoints
         app.MapGet("/api/v1/properties",
             async (
                 ISender sender,
-                CancellationToken ct
+                CancellationToken ct,
+                int pageNumber = 1,
+                int pageSize = 10
             ) =>
             {
-                var query = new GetAllPropertiesQuery();
+                var query = new GetAllPropertiesQuery(pageNumber, pageSize);
                 var result = await sender.Send(query, ct);
 
                 return Results.Ok(result);

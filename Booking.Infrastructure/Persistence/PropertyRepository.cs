@@ -4,7 +4,7 @@ using Booking.Domain.Entities.Properties;
 using Booking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Booking.Infrastructure.Repositories;
+namespace Booking.Infrastructure.Persistence;
 
 public class PropertyRepository : IPropertyRepository
 {
@@ -115,6 +115,26 @@ public class PropertyRepository : IPropertyRepository
         return await _db.Properties
             .Include(p => p.Address)
             .ToListAsync(ct);
+    }
+
+    public async Task<(List<Property> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct)
+    {
+        var query = _db.Properties
+            .AsNoTracking()
+            .Include(p => p.Address)
+            .OrderByDescending(p => p.CreatedAt);
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
     }
 
     public async Task<Property?> GetPropertyById(int propertyId, CancellationToken ct)
@@ -233,6 +253,64 @@ public class PropertyRepository : IPropertyRepository
         }
 
         return await query.ToListAsync(ct);
+    }
+
+    public async Task<(List<Property> Items, int TotalCount)> SearchPagedAsync(
+        string city,
+        int guests,
+        DateOnly date,
+        string? propertyType,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct)
+    {
+        var query = _db.Properties
+            .AsNoTracking()
+            .Include(p => p.Address)
+            .Include(p => p.Availabilities)
+            .Where(p =>
+                p.IsActive &&
+                p.IsApproved &&
+                p.Address.City == city &&
+                p.MaxGuests >= guests &&
+                p.Availabilities.Any(a => a.Date == date && a.IsAvailable));
+
+        if (!string.IsNullOrWhiteSpace(propertyType) &&
+            Enum.TryParse<PropertyType>(propertyType, true, out var parsedType))
+        {
+            query = query.Where(p => p.PropertyType == parsedType);
+        }
+
+        if (minPrice.HasValue)
+        {
+            query = query.Where(p =>
+                p.Availabilities.Any(a =>
+                    a.Date == date &&
+                    a.IsAvailable &&
+                    a.Price >= minPrice.Value));
+        }
+
+        if (maxPrice.HasValue)
+        {
+            query = query.Where(p =>
+                p.Availabilities.Any(a =>
+                    a.Date == date &&
+                    a.IsAvailable &&
+                    a.Price <= maxPrice.Value));
+        }
+
+        query = query.OrderByDescending(p => p.CreatedAt);
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
     }
 
     public async Task SaveChanges(CancellationToken ct)
