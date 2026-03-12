@@ -30,6 +30,8 @@ public interface IPropertyRepository
 
     Task AddPhotoAsync(PropertyPhoto photo, CancellationToken ct);
 
+    Task RemovePhotoAsync(PropertyPhoto photo, CancellationToken ct);
+
     Task<List<PropertyPhoto>> GetPhotosByPropertyIdAsync(int propertyId, CancellationToken ct);
 
     Task UpsertAvailabilityAsync(
@@ -57,15 +59,14 @@ public interface IPropertyRepository
         decimal? maxPrice,
         CancellationToken ct);
 
-
     Task<(List<Property> Items, int TotalCount)> SearchPagedAsync(
-    string city,
-    int guests,
-    DateOnly date,
-    string? propertyType,
-    decimal? minPrice,
-    decimal? maxPrice,
-    int pageNumber,
-    int pageSize,
-    CancellationToken ct);
+        string city,
+        int guests,
+        DateOnly date,
+        string? propertyType,
+        decimal? minPrice,
+        decimal? maxPrice,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct);
 }

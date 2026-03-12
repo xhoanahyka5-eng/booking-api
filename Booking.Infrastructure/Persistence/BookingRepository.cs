@@ -57,6 +57,28 @@ public class BookingRepository : IBookingRepository
             .FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken);
     }
 
+    public async Task<List<BookingEntity>> GetConfirmedBookingsToCompleteAsync(
+        DateOnly today,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Bookings
+            .Where(b =>
+                b.BookingStatus == BookingStatus.Confirmed &&
+                b.EndDate < today)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<BookingEntity>> GetPendingBookingsToExpireAsync(
+        DateTime cutoffUtc,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Bookings
+            .Where(b =>
+                b.BookingStatus == BookingStatus.Pending &&
+                b.CreatedAt <= cutoffUtc)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task BlockAvailabilityAsync(
         int propertyId,
         DateOnly startDate,

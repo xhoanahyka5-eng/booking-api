@@ -8,49 +8,55 @@ public class Booking
     public int Id { get; private set; }
 
     public int PropertyId { get; private set; }
+
     public Guid GuestId { get; private set; }
 
     public DateOnly StartDate { get; private set; }
+
     public DateOnly EndDate { get; private set; }
 
     public int GuestCount { get; private set; }
 
     public decimal CleaningFee { get; private set; }
+
     public decimal AmenitiesUpCharge { get; private set; }
+
     public decimal PriceForPeriod { get; private set; }
 
     [NotMapped]
-    public decimal TotalPrice =>
-        PriceForPeriod + CleaningFee + AmenitiesUpCharge;
+    public decimal TotalPrice => PriceForPeriod + CleaningFee + AmenitiesUpCharge;
 
     public BookingStatus BookingStatus { get; private set; }
 
     public DateTime CreatedAt { get; private set; }
+
     public DateTime? LastModifiedAt { get; private set; }
 
     public DateTime? ConfirmedOnUtc { get; private set; }
+
     public DateTime? RejectedOnUtc { get; private set; }
+
     public DateTime? CompletedOnUtc { get; private set; }
+
     public DateTime? CancelledOnUtc { get; private set; }
+
+    public DateTime? ExpiredOnUtc { get; private set; }
 
     private Booking() { }
 
     public Booking(int propertyId, Guid guestId, DateOnly start, DateOnly end, int guestCount)
     {
-
         if (end <= start)
             throw new ArgumentException("End date must be after start date.");
 
         if (guestCount <= 0)
             throw new ArgumentException("Guest count must be greater than zero.");
 
-
         PropertyId = propertyId;
         GuestId = guestId;
         StartDate = start;
         EndDate = end;
         GuestCount = guestCount;
-
         CreatedAt = DateTime.UtcNow;
         BookingStatus = BookingStatus.Pending;
     }
@@ -66,7 +72,6 @@ public class Booking
         LastModifiedAt = DateTime.UtcNow;
     }
 
-
     public void Confirm()
     {
         if (BookingStatus != BookingStatus.Pending)
@@ -76,7 +81,6 @@ public class Booking
         ConfirmedOnUtc = DateTime.UtcNow;
         LastModifiedAt = DateTime.UtcNow;
     }
-
 
     public void Reject()
     {
@@ -88,17 +92,35 @@ public class Booking
         LastModifiedAt = DateTime.UtcNow;
     }
 
+    public void Complete()
+    {
+        if (BookingStatus != BookingStatus.Confirmed)
+            throw new InvalidOperationException("Only confirmed bookings can be completed.");
+
+        BookingStatus = BookingStatus.Completed;
+        CompletedOnUtc = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
+    public void Expire()
+    {
+        if (BookingStatus != BookingStatus.Pending)
+            throw new InvalidOperationException("Only pending bookings can be expired.");
+
+        BookingStatus = BookingStatus.Expired;
+        ExpiredOnUtc = DateTime.UtcNow;
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
     public void Cancel()
     {
-        if (BookingStatus != BookingStatus.Pending &&
-            BookingStatus != BookingStatus.Confirmed)
+        if (BookingStatus != BookingStatus.Pending && BookingStatus != BookingStatus.Confirmed)
             throw new InvalidOperationException("Booking cannot be cancelled.");
 
         BookingStatus = BookingStatus.Cancelled;
         CancelledOnUtc = DateTime.UtcNow;
         LastModifiedAt = DateTime.UtcNow;
     }
-
 }
 
 public enum BookingStatus
@@ -107,5 +129,6 @@ public enum BookingStatus
     Confirmed = 1,
     Rejected = 2,
     Completed = 3,
-    Cancelled = 4
+    Cancelled = 4,
+    Expired = 5
 }

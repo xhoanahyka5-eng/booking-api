@@ -53,5 +53,13 @@ public interface IBookingRepository
         int pageSize,
         CancellationToken cancellationToken);
 
+    Task<List<BookingEntity>> GetConfirmedBookingsToCompleteAsync(
+        DateOnly today,
+        CancellationToken cancellationToken);
+
+    Task<List<BookingEntity>> GetPendingBookingsToExpireAsync(
+        DateTime cutoffUtc,
+        CancellationToken cancellationToken);
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

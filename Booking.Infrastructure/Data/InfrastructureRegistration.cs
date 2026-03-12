@@ -4,6 +4,7 @@ using Booking.Application.Features.Properties.Persistence;
 using Booking.Application.Features.Reviews.Persistence;
 using Booking.Application.Features.Users.Persistence;
 using Booking.Infrastructure.Authentication;
+using Booking.Infrastructure.BackgroundJobs;
 using Booking.Infrastructure.Data;
 using Booking.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -32,6 +33,9 @@ public static class InfrastructureRegistration
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+
+        services.AddHostedService<CompleteBookingsBackgroundService>();
+        services.AddHostedService<ExpirePendingBookingsBackgroundService>();
 
         return services;
     }

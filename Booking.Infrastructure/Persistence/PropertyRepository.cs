@@ -169,6 +169,12 @@ public class PropertyRepository : IPropertyRepository
         await _db.PropertyPhotos.AddAsync(photo, ct);
     }
 
+    public Task RemovePhotoAsync(PropertyPhoto photo, CancellationToken ct)
+    {
+        _db.PropertyPhotos.Remove(photo);
+        return Task.CompletedTask;
+    }
+
     public async Task<List<PropertyPhoto>> GetPhotosByPropertyIdAsync(
         int propertyId,
         CancellationToken ct)
