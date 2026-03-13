@@ -17,31 +17,26 @@ public class GetPropertyReviewsQueryHandler
         GetPropertyReviewsQuery request,
         CancellationToken cancellationToken)
     {
-        var reviews = await _reviewRepository.GetPropertyReviewsAsync(
-            request.PropertyId,
-            cancellationToken);
+        var pageNumber = request.PageNumber < 1 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize < 1 ? 10 : request.PageSize > 50 ? 50 : request.PageSize;
 
-        var reviewDtos = reviews
-            .Select(r => new PropertyReviewDto
-            {
-                ReviewId = r.Id,
-                BookingId = r.BookingId,
-                GuestId = r.GuestId,
-                Rating = r.Rating,
-                Comment = r.Comment,
-                CreatedAt = r.CreatedAt
-            })
-            .ToList();
+        var (items, totalCount, averageRating) =
+            await _reviewRepository.GetPropertyReviewsPagedAsync(
+                request.PropertyId,
+                pageNumber,
+                pageSize,
+                cancellationToken);
 
-        var averageRating = reviewDtos.Count == 0
-            ? 0
-            : Math.Round((decimal)reviewDtos.Average(r => r.Rating), 2);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
         return new PropertyReviewsResponse
         {
+            Items = items,
             AverageRating = averageRating,
-            ReviewCount = reviewDtos.Count,
-            Reviews = reviewDtos
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
         };
     }
 }

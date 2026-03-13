@@ -40,18 +40,24 @@ public static class ReviewEndpoints
             })
             .RequireAuthorization();
 
-        app.MapGet("/api/v1/reviews/property/{propertyId}",
+        app.MapGet("/api/v1/properties/{propertyId}/reviews",
             async (
                 int propertyId,
                 ISender sender,
-                CancellationToken ct
+                CancellationToken ct,
+                int pageNumber = 1,
+                int pageSize = 10
             ) =>
             {
-                var result = await sender.Send(
-                    new GetPropertyReviewsQuery(propertyId),
-                    ct);
+                var query = new GetPropertyReviewsQuery(
+                    propertyId,
+                    pageNumber,
+                    pageSize
+                );
+
+                var result = await sender.Send(query, ct);
 
                 return Results.Ok(result);
             });
-    }
+            }
 }
