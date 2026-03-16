@@ -1,6 +1,7 @@
 using Booking.Application.Features.Users.BecomeHost;
 using Booking.Application.Features.Users.GetAllUsers;
 using Booking.Application.Features.Users.Login;
+using Booking.Application.Features.Users.Refresh;
 using Booking.Application.Features.Users.Register;
 using MediatR;
 using System.Security.Claims;
@@ -56,6 +57,16 @@ public static class UserEndpoints
                 return Results.Ok(result);
             })
             .RequireAuthorization();
+
+        app.MapPost("/api/v1/users/refresh",
+            async (
+                RefreshTokenCommand command,
+                ISender sender
+            ) =>
+            {
+                var result = await sender.Send(command);
+                return Results.Ok(result);
+            });
 
         app.MapPost("/api/v1/users/become-host",
             async (
