@@ -4,7 +4,8 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-	</PropertyGroup>
+	  <UserSecretsId>4e7e98e2-af77-4eea-a28c-d9e0bee04844</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<!-- MediatR -->
