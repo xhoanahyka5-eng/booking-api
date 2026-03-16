@@ -28,6 +28,7 @@ public class SearchPropertiesQueryHandler
             request.PropertyType,
             request.MinPrice,
             request.MaxPrice,
+            request.SortBy,
             pageNumber,
             pageSize,
             cancellationToken);

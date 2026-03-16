@@ -265,34 +265,37 @@ public static class PropertyEndpoints
             });
 
         app.MapGet("/api/v1/properties/search",
-            async (
-                string city,
-                int guests,
-                DateOnly date,
-                string? propertyType,
-                decimal? minPrice,
-                decimal? maxPrice,
-                ISender sender,
-                CancellationToken ct,
-                int pageNumber = 1,
-                int pageSize = 10
-            ) =>
-            {
-                var query = new SearchPropertiesQuery(
-                    city,
-                    guests,
-                    date,
-                    propertyType,
-                    minPrice,
-                    maxPrice,
-                    pageNumber,
-                    pageSize
-                );
+             async (
+                 string city,
+                 int guests,
+                 DateOnly date,
+                 string? propertyType,
+                 decimal? minPrice,
+                 decimal? maxPrice,
+                 string? sortBy,
+                 ISender sender,
+                 CancellationToken ct,
+                 int pageNumber = 1,
+                 int pageSize = 10
+             ) =>
+             {
+                 var query = new SearchPropertiesQuery(
+                     city,
+                     guests,
+                     date,
+                     propertyType,
+                     minPrice,
+                     maxPrice,
+                     sortBy,
+                     pageNumber,
+                     pageSize
+                 );
 
-                var result = await sender.Send(query, ct);
+                 var result = await sender.Send(query, ct);
 
-                return Results.Ok(result);
-            });
+                 return Results.Ok(result);
+             });
+
 
         app.MapGet("/api/v1/properties",
             async (

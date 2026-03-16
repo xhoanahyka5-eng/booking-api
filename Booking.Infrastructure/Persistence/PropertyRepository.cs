@@ -268,6 +268,7 @@ public class PropertyRepository : IPropertyRepository
         string? propertyType,
         decimal? minPrice,
         decimal? maxPrice,
+        string? sortBy,
         int pageNumber,
         int pageSize,
         CancellationToken ct)
@@ -307,7 +308,24 @@ public class PropertyRepository : IPropertyRepository
                     a.Price <= maxPrice.Value));
         }
 
-        query = query.OrderByDescending(p => p.CreatedAt);
+        var normalizedSort = sortBy?.Trim().ToLower();
+
+        query = normalizedSort switch
+        {
+            "priceasc" => query.OrderBy(p =>
+                p.Availabilities
+                    .Where(a => a.Date == date && a.IsAvailable)
+                    .Select(a => a.Price)
+                    .FirstOrDefault()),
+
+            "pricedesc" => query.OrderByDescending(p =>
+                p.Availabilities
+                    .Where(a => a.Date == date && a.IsAvailable)
+                    .Select(a => a.Price)
+                    .FirstOrDefault()),
+
+            _ => query.OrderByDescending(p => p.CreatedAt)
+        };
 
         var totalCount = await query.CountAsync(ct);
 

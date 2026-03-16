@@ -10,6 +10,7 @@
 		<!-- MediatR -->
 		<PackageReference Include="MediatR" Version="12.1.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
+		<PackageReference Include="SendGrid" Version="9.29.3" />
 		<ProjectReference Include="..\Booking.Application\Booking.Application.csproj" />
 		<ProjectReference Include="..\Booking.Infrastructure\Booking.Infrastructure.csproj" />
 	</ItemGroup>

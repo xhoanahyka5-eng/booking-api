@@ -1,4 +1,5 @@
 using Booking.Application.Abstractions.Authentication;
+using Booking.Application.Abstractions.Email;
 using Booking.Application.Features.Bookings.Persistence;
 using Booking.Application.Features.Properties.Persistence;
 using Booking.Application.Features.Reviews.Persistence;
@@ -6,6 +7,7 @@ using Booking.Application.Features.Users.Persistence;
 using Booking.Infrastructure.Authentication;
 using Booking.Infrastructure.BackgroundJobs;
 using Booking.Infrastructure.Data;
+using Booking.Infrastructure.Email;
 using Booking.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -28,11 +30,17 @@ public static class InfrastructureRegistration
             )
         );
 
+        services.Configure<SendGridSettings>(
+            configuration.GetSection("SendGridSettings"));
+
+      
+
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IPropertyRepository, PropertyRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<IEmailService, SendGridEmailService>();
 
         services.AddHostedService<CompleteBookingsBackgroundService>();
         services.AddHostedService<ExpirePendingBookingsBackgroundService>();

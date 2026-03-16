@@ -20,6 +20,14 @@ public class SearchPropertiesQueryValidator
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, 50);
 
+        RuleFor(x => x.SortBy)
+            .Must(x =>
+                string.IsNullOrWhiteSpace(x) ||
+                x.Equals("priceAsc", StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("priceDesc", StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("newest", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("SortBy must be priceAsc, priceDesc, or newest.");
+
         RuleFor(x => x)
             .Must(x => !x.MinPrice.HasValue || !x.MaxPrice.HasValue || x.MinPrice <= x.MaxPrice)
             .WithMessage("MinPrice cannot be greater than MaxPrice.");

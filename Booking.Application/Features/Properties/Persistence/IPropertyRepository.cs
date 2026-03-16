@@ -66,6 +66,7 @@ public interface IPropertyRepository
         string? propertyType,
         decimal? minPrice,
         decimal? maxPrice,
+        string? sortBy,
         int pageNumber,
         int pageSize,
         CancellationToken ct);
