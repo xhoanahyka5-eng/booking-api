@@ -1,8 +1,9 @@
-﻿using MediatR;
-using Microsoft.Extensions.Logging;
-using Booking.Application.Features.Users.Persistence;
-using Booking.Application.Abstractions.Authentication;
+﻿using Booking.Application.Abstractions.Authentication;
 using Booking.Application.Common.Exceptions;
+using Booking.Application.Features.Users.Persistence;
+using Booking.Domain.Entities.Authentication;
+using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Booking.Application.Features.Users.Login;
 
@@ -11,15 +12,18 @@ public class LoginUserCommandHandler
 {
     private readonly IUserRepository _userRepository;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ILogger<LoginUserCommandHandler> _logger;
 
     public LoginUserCommandHandler(
         IUserRepository userRepository,
         IJwtTokenGenerator jwtTokenGenerator,
+        IRefreshTokenRepository refreshTokenRepository,
         ILogger<LoginUserCommandHandler> logger)
     {
         _userRepository = userRepository;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _refreshTokenRepository = refreshTokenRepository;
         _logger = logger;
     }
 
@@ -27,28 +31,37 @@ public class LoginUserCommandHandler
         LoginUserCommand request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Login attempt for email: {Email}", request.Email);
+        _logger.LogInformation("Login attempt for {Email}", request.Email);
 
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
         if (user is null)
-        {
-            _logger.LogWarning("User not found: {Email}", request.Email);
             throw new UnauthorizedException("Invalid credentials.");
-        }
 
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
         if (!isPasswordValid)
-        {
-            _logger.LogWarning("Invalid password for: {Email}", request.Email);
             throw new UnauthorizedException("Invalid credentials.");
-        }
 
-        var token = _jwtTokenGenerator.GenerateToken(user);
+        var accessToken = _jwtTokenGenerator.GenerateToken(user);
 
-        _logger.LogInformation("Login successful for: {Email}", request.Email);
+        var refreshTokenValue = RefreshTokenGenerator.Generate();
 
-        return new LoginUserResponse(token, 3600);
+        var refreshToken = new RefreshToken(
+            user.Id,
+            refreshTokenValue,
+            DateTime.UtcNow.AddDays(7)
+        );
+
+        await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+        await _refreshTokenRepository.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Login successful for {Email}", request.Email);
+
+        return new LoginUserResponse(
+            accessToken,
+            refreshTokenValue,
+            3600
+        );
     }
 }

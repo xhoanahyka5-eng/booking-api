@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using Booking.Domain.Entities.Properties;
 
 namespace Booking.Domain.Entities.Bookings;
 
@@ -41,6 +42,7 @@ public class Booking
     public DateTime? CancelledOnUtc { get; private set; }
 
     public DateTime? ExpiredOnUtc { get; private set; }
+    public Property Property { get; private set; } = null!;
 
     private Booking() { }
 

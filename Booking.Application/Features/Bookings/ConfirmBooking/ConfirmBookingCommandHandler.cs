@@ -52,7 +52,22 @@ public class ConfirmBookingCommandHandler
         if (booking.BookingStatus != BookingStatus.Pending)
             throw new ConflictException("Only pending bookings can be confirmed.");
 
+        var exists = await _bookingRepository.ExistsAsync(
+            booking.PropertyId,
+            booking.StartDate,
+            booking.EndDate,
+            cancellationToken);
+
+        if (exists)
+            throw new ConflictException("These dates are already booked.");
+
         booking.Confirm();
+
+        await _bookingRepository.BlockAvailabilityAsync(
+            booking.PropertyId,
+            booking.StartDate,
+            booking.EndDate,
+            cancellationToken);
 
         await _bookingRepository.SaveChangesAsync(cancellationToken);
 

@@ -2,9 +2,15 @@
 using Booking.Application.Features.Bookings.GetMyBookings;
 using Booking.Application.Features.Bookings.Persistence;
 using Booking.Domain.Entities.Bookings;
+using Booking.Domain.Entities.Properties;
 using Booking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+// ✅ FIX për konflikt namespace
 using BookingEntity = Booking.Domain.Entities.Bookings.Booking;
 using PropertyEntity = Booking.Domain.Entities.Properties.Property;
 
@@ -12,89 +18,66 @@ namespace Booking.Infrastructure.Persistence;
 
 public class BookingRepository : IBookingRepository
 {
-    private readonly BookingDbContext _context;
+    private readonly BookingDbContext _db;
 
-    public BookingRepository(BookingDbContext context)
+    public BookingRepository(BookingDbContext db)
     {
-        _context = context;
-    }
-
-    public async Task<PropertyEntity?> GetPropertyWithAvailabilityAsync(
-        int propertyId,
-        CancellationToken cancellationToken)
-    {
-        return await _context.Properties
-            .Include(p => p.Availabilities)
-            .AsTracking()
-            .FirstOrDefaultAsync(p => p.Id == propertyId, cancellationToken);
-    }
-
-    public async Task<Guid?> GetPropertyOwnerIdAsync(
-        int propertyId,
-        CancellationToken cancellationToken)
-    {
-        return await _context.Properties
-            .Where(p => p.Id == propertyId)
-            .Select(p => (Guid?)p.OwnerId)
-            .FirstOrDefaultAsync(cancellationToken);
+        _db = db;
     }
 
     public async Task<int> AddBookingAsync(
         BookingEntity booking,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        await _context.Bookings.AddAsync(booking, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-
+        _db.Bookings.Add(booking);
+        await _db.SaveChangesAsync(ct);
         return booking.Id;
     }
 
     public async Task<BookingEntity?> GetBookingByIdAsync(
         int bookingId,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        return await _context.Bookings
-            .FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken);
+        return await _db.Bookings
+            .Include(b => b.Property)
+            .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
     }
 
-    public async Task<List<BookingEntity>> GetConfirmedBookingsToCompleteAsync(
-        DateOnly today,
-        CancellationToken cancellationToken)
+    public async Task<PropertyEntity?> GetPropertyWithAvailabilityAsync(
+        int propertyId,
+        CancellationToken ct)
     {
-        return await _context.Bookings
-            .Where(b =>
-                b.BookingStatus == BookingStatus.Confirmed &&
-                b.EndDate < today)
-            .ToListAsync(cancellationToken);
+        return await _db.Properties
+            .Include(p => p.Availabilities)
+            .FirstOrDefaultAsync(p => p.Id == propertyId, ct);
     }
 
-    public async Task<List<BookingEntity>> GetPendingBookingsToExpireAsync(
-        DateTime cutoffUtc,
-        CancellationToken cancellationToken)
+    public async Task<Guid?> GetPropertyOwnerIdAsync(
+        int propertyId,
+        CancellationToken ct)
     {
-        return await _context.Bookings
-            .Where(b =>
-                b.BookingStatus == BookingStatus.Pending &&
-                b.CreatedAt <= cutoffUtc)
-            .ToListAsync(cancellationToken);
+        return await _db.Properties
+            .Where(p => p.Id == propertyId)
+            .Select(p => p.OwnerId)
+            .FirstOrDefaultAsync(ct);
     }
 
     public async Task BlockAvailabilityAsync(
         int propertyId,
         DateOnly startDate,
         DateOnly endDate,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var availabilities = await _context.PropertyAvailabilities
-            .Where(a =>
-                a.PropertyId == propertyId &&
-                a.Date >= startDate &&
-                a.Date < endDate)
-            .ToListAsync(cancellationToken);
+        var dates = Enumerable.Range(0, endDate.DayNumber - startDate.DayNumber)
+            .Select(offset => startDate.AddDays(offset));
 
-        foreach (var availability in availabilities)
+        var availabilities = await _db.PropertyAvailabilities
+            .Where(a => a.PropertyId == propertyId && dates.Contains(a.Date))
+            .ToListAsync(ct);
+
+        foreach (var a in availabilities)
         {
-            availability.IsAvailable = false;
+            a.IsAvailable = false;
         }
     }
 
@@ -102,21 +85,19 @@ public class BookingRepository : IBookingRepository
         int propertyId,
         DateOnly startDate,
         DateOnly endDate,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var availabilities = await _context.PropertyAvailabilities
-            .Where(a =>
-                a.PropertyId == propertyId &&
-                a.Date >= startDate &&
-                a.Date < endDate)
-            .ToListAsync(cancellationToken);
+        var dates = Enumerable.Range(0, endDate.DayNumber - startDate.DayNumber)
+            .Select(offset => startDate.AddDays(offset));
 
-        foreach (var availability in availabilities)
+        var availabilities = await _db.PropertyAvailabilities
+            .Where(a => a.PropertyId == propertyId && dates.Contains(a.Date))
+            .ToListAsync(ct);
+
+        foreach (var a in availabilities)
         {
-            availability.IsAvailable = true;
+            a.IsAvailable = true;
         }
-
-        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<(List<MyBookingDto> Items, int TotalCount)> GetGuestBookingsPagedAsync(
@@ -125,61 +106,44 @@ public class BookingRepository : IBookingRepository
         string? scope,
         int pageNumber,
         int pageSize,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var query = _db.Bookings
+            .Include(b => b.Property)
+            .ThenInclude(p => p.Address)
+            .Where(b => b.GuestId == guestId);
 
-        var query =
-            from booking in _context.Bookings
-            join property in _context.Properties on booking.PropertyId equals property.Id
-            join address in _context.Addresses on property.AddressId equals address.Id
-            where booking.GuestId == guestId
-            select new MyBookingDto
-            {
-                BookingId = booking.Id,
-                PropertyId = property.Id,
-                PropertyName = property.Name,
-                City = address.City,
-                StartDate = booking.StartDate,
-                EndDate = booking.EndDate,
-                GuestCount = booking.GuestCount,
-                PriceForPeriod = booking.PriceForPeriod,
-                CleaningFee = booking.CleaningFee,
-                AmenitiesUpCharge = booking.AmenitiesUpCharge,
-                TotalPrice = booking.PriceForPeriod + booking.CleaningFee + booking.AmenitiesUpCharge,
-                BookingStatus = booking.BookingStatus.ToString(),
-                IsUpcoming = booking.EndDate > today,
-                CreatedAt = booking.CreatedAt
-            };
-
-        if (status.HasValue)
-        {
-            var statusText = status.Value.ToString();
-            query = query.Where(x => x.BookingStatus == statusText);
-        }
-
-        if (!string.IsNullOrWhiteSpace(scope))
-        {
-            var normalizedScope = scope.Trim().ToLower();
-
-            if (normalizedScope == "upcoming")
-            {
-                query = query.Where(x => x.IsUpcoming);
-            }
-            else if (normalizedScope == "past")
-            {
-                query = query.Where(x => !x.IsUpcoming);
-            }
-        }
-
-        query = query.OrderByDescending(x => x.CreatedAt);
-
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(ct);
 
         var items = await query
+            .OrderByDescending(b => b.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .Select(b => new MyBookingDto
+            {
+                BookingId = b.Id,
+                PropertyId = b.PropertyId,
+
+                PropertyName = b.Property.Name,
+                City = b.Property.Address.City,
+
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
+
+                GuestCount = b.GuestCount,
+
+                PriceForPeriod = b.PriceForPeriod,
+                CleaningFee = b.CleaningFee,
+                AmenitiesUpCharge = b.AmenitiesUpCharge,
+                TotalPrice = b.TotalPrice,
+
+                BookingStatus = b.BookingStatus.ToString(),
+
+                IsUpcoming = b.StartDate > DateOnly.FromDateTime(DateTime.UtcNow),
+
+                CreatedAt = b.CreatedAt
+            })
+            .ToListAsync(ct);
 
         return (items, totalCount);
     }
@@ -190,66 +154,100 @@ public class BookingRepository : IBookingRepository
         string? scope,
         int pageNumber,
         int pageSize,
-        CancellationToken cancellationToken)
+        CancellationToken ct)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var query = _db.Bookings
+            .Include(b => b.Property)
+            .ThenInclude(p => p.Address)
+            .Where(b => b.Property.OwnerId == hostId);
 
-        var query =
-            from booking in _context.Bookings
-            join property in _context.Properties on booking.PropertyId equals property.Id
-            where property.OwnerId == hostId
-            select new HostBookingDto
-            {
-                BookingId = booking.Id,
-                PropertyId = property.Id,
-                PropertyName = property.Name,
-                GuestId = booking.GuestId,
-                StartDate = booking.StartDate,
-                EndDate = booking.EndDate,
-                GuestCount = booking.GuestCount,
-                PriceForPeriod = booking.PriceForPeriod,
-                CleaningFee = booking.CleaningFee,
-                AmenitiesUpCharge = booking.AmenitiesUpCharge,
-                TotalPrice = booking.PriceForPeriod + booking.CleaningFee + booking.AmenitiesUpCharge,
-                BookingStatus = booking.BookingStatus.ToString(),
-                IsUpcoming = booking.EndDate > today,
-                CreatedAt = booking.CreatedAt
-            };
-
-        if (status.HasValue)
-        {
-            var statusText = status.Value.ToString();
-            query = query.Where(x => x.BookingStatus == statusText);
-        }
-
-        if (!string.IsNullOrWhiteSpace(scope))
-        {
-            var normalizedScope = scope.Trim().ToLower();
-
-            if (normalizedScope == "upcoming")
-            {
-                query = query.Where(x => x.IsUpcoming);
-            }
-            else if (normalizedScope == "past")
-            {
-                query = query.Where(x => !x.IsUpcoming);
-            }
-        }
-
-        query = query.OrderByDescending(x => x.CreatedAt);
-
-        var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(ct);
 
         var items = await query
+            .OrderByDescending(b => b.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .Select(b => new HostBookingDto
+            {
+                BookingId = b.Id,
+                PropertyId = b.PropertyId,
+
+                PropertyName = b.Property.Name,
+
+                GuestId = b.GuestId,
+
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
+
+                GuestCount = b.GuestCount,
+
+                PriceForPeriod = b.PriceForPeriod,
+                CleaningFee = b.CleaningFee,
+                AmenitiesUpCharge = b.AmenitiesUpCharge,
+                TotalPrice = b.TotalPrice,
+
+                BookingStatus = b.BookingStatus.ToString(),
+
+                IsUpcoming = b.StartDate > DateOnly.FromDateTime(DateTime.UtcNow),
+
+                CreatedAt = b.CreatedAt
+            })
+            .ToListAsync(ct);
 
         return (items, totalCount);
     }
 
-    public async Task SaveChangesAsync(CancellationToken cancellationToken)
+    public async Task<List<BookingEntity>> GetConfirmedBookingsToCompleteAsync(
+        DateOnly today,
+        CancellationToken ct)
     {
-        await _context.SaveChangesAsync(cancellationToken);
+        return await _db.Bookings
+            .Where(b => b.BookingStatus == BookingStatus.Confirmed && b.EndDate < today)
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<BookingEntity>> GetPendingBookingsToExpireAsync(
+        DateTime cutoffUtc,
+        CancellationToken ct)
+    {
+        return await _db.Bookings
+            .Where(b => b.BookingStatus == BookingStatus.Pending && b.CreatedAt < cutoffUtc)
+            .ToListAsync(ct);
+    }
+
+    public async Task<bool> ExistsAsync(
+        int propertyId,
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken ct)
+    {
+        return await _db.Bookings
+            .AnyAsync(b =>
+                b.PropertyId == propertyId &&
+                b.StartDate < endDate &&
+                b.EndDate > startDate,
+                ct);
+    }
+
+    public async Task MarkUnavailableAsync(
+        int propertyId,
+        DateOnly date,
+        CancellationToken ct)
+    {
+        var availability = await _db.PropertyAvailabilities
+            .FirstOrDefaultAsync(a =>
+                a.PropertyId == propertyId &&
+                a.Date == date,
+                ct);
+
+        if (availability is not null)
+        {
+            availability.IsAvailable = false;
+        }
+    }
+
+    public async Task SaveChangesAsync(CancellationToken ct)
+    {
+        await _db.SaveChangesAsync(ct);
     }
 }

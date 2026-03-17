@@ -1,4 +1,5 @@
 ﻿using Booking.Domain.Entities.Addresses;
+using Booking.Domain.Entities.Authentication;
 using Booking.Domain.Entities.OwnerProfiles;
 using Booking.Domain.Entities.Properties;
 using Booking.Domain.Entities.Reviews;
@@ -20,6 +21,7 @@ public class BookingDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
 
@@ -69,6 +71,23 @@ public class BookingDbContext : DbContext
                 a.Street,
                 a.PostalCode
             }).IsUnique();
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(rt => rt.Id);
+
+            entity.Property(rt => rt.Token)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.HasIndex(rt => rt.Token)
+                .IsUnique();
+
+            entity.HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<UserRole>(entity =>

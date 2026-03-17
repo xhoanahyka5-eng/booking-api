@@ -1,6 +1,13 @@
-﻿using Booking.Application.Abstractions.Persistence;
+﻿#nullable enable
+
+using Booking.Application.Abstractions.Persistence;
 using Booking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Booking.Infrastructure.Persistence;
 
@@ -29,7 +36,9 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity>
 
     public async Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _dbSet.ToListAsync(cancellationToken);
+        return await _dbSet
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(TEntity entity, CancellationToken cancellationToken)

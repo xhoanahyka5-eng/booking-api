@@ -2,6 +2,10 @@
 using Booking.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Booking.Infrastructure.Authentication;
 

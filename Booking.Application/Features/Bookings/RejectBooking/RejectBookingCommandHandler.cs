@@ -52,10 +52,19 @@ public class RejectBookingCommandHandler
         if (booking.BookingStatus != BookingStatus.Pending)
             throw new ConflictException("Only pending bookings can be rejected.");
 
+        // ✅ DOMAIN LOGIC
         booking.Reject();
+
+        // 🔁 OPTIONAL safety (nëse ndonjëherë ishte bllokuar)
+        await _bookingRepository.RestoreAvailabilityAsync(
+            booking.PropertyId,
+            booking.StartDate,
+            booking.EndDate,
+            cancellationToken);
 
         await _bookingRepository.SaveChangesAsync(cancellationToken);
 
+        // 📧 Email guest
         var guest = await _userRepository.GetByIdAsync(
             booking.GuestId,
             cancellationToken);
@@ -64,31 +73,24 @@ public class RejectBookingCommandHandler
         {
             try
             {
-                _logger.LogInformation(
-                    "Sending rejection email to {Email} for booking {BookingId}",
-                    guest.Email,
-                    booking.Id);
-
                 await _emailService.SendAsync(
                     new EmailMessage
                     {
                         To = guest.Email,
-                        Subject = "Update on your booking request",
+                        Subject = "Booking rejected",
                         Body =
 $@"Hello {guest.FirstName},
 
-We are sorry, but your booking request was not accepted by the host.
+Unfortunately, your booking request has been rejected by the host.
 
 Booking details:
-Property ID: {booking.PropertyId}
-Check-in: {booking.StartDate:dd/MM/yyyy}
-Check-out: {booking.EndDate:dd/MM/yyyy}
-Guests: {booking.GuestCount}
-Total price: {booking.TotalPrice:0.00}
+Property Id: {booking.PropertyId}
+Check-in: {booking.StartDate}
+Check-out: {booking.EndDate}
 
-You can search for other available properties and place a new booking request.
+You can explore other available properties on our platform.
 
-Thank you for using our Booking Platform."
+Booking Platform"
                     },
                     cancellationToken);
             }

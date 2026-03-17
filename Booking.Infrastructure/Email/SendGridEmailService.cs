@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SendGrid;
 using SendGrid.Helpers.Mail;
-using System.Net.Mail;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Booking.Infrastructure.Email;
 

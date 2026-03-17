@@ -3,6 +3,11 @@ using Booking.Domain.Entities.Addresses;
 using Booking.Domain.Entities.Properties;
 using Booking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Booking.Infrastructure.Persistence;
 
@@ -19,7 +24,6 @@ public class PropertyRepository : IPropertyRepository
     {
         _db.Properties.Add(property);
         await _db.SaveChangesAsync(ct);
-
         return property.Id;
     }
 
@@ -81,28 +85,20 @@ public class PropertyRepository : IPropertyRepository
             .AnyAsync(p => p.Id == propertyId, ct);
     }
 
-    public async Task<bool> AvailabilityExists(
-        int propertyId,
-        DateOnly date,
-        CancellationToken ct)
+    public async Task<bool> AvailabilityExists(int propertyId, DateOnly date, CancellationToken ct)
     {
         return await _db.PropertyAvailabilities
             .AnyAsync(a => a.PropertyId == propertyId && a.Date == date, ct);
     }
 
-    public async Task<int> AddAvailability(
-        PropertyAvailability availability,
-        CancellationToken ct)
+    public async Task<int> AddAvailability(PropertyAvailability availability, CancellationToken ct)
     {
         _db.PropertyAvailabilities.Add(availability);
         await _db.SaveChangesAsync(ct);
-
         return availability.Id;
     }
 
-    public async Task<List<PropertyAvailability>> GetAvailabilityByPropertyId(
-        int propertyId,
-        CancellationToken ct)
+    public async Task<List<PropertyAvailability>> GetAvailabilityByPropertyId(int propertyId, CancellationToken ct)
     {
         return await _db.PropertyAvailabilities
             .Where(a => a.PropertyId == propertyId)
@@ -113,14 +109,12 @@ public class PropertyRepository : IPropertyRepository
     public async Task<List<Property>> GetAllAsync(CancellationToken ct)
     {
         return await _db.Properties
+            .AsNoTracking()
             .Include(p => p.Address)
             .ToListAsync(ct);
     }
 
-    public async Task<(List<Property> Items, int TotalCount)> GetPagedAsync(
-        int pageNumber,
-        int pageSize,
-        CancellationToken ct)
+    public async Task<(List<Property> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, CancellationToken ct)
     {
         var query = _db.Properties
             .AsNoTracking()
@@ -146,18 +140,14 @@ public class PropertyRepository : IPropertyRepository
             .FirstOrDefaultAsync(p => p.Id == propertyId, ct);
     }
 
-    public async Task<Property?> GetPropertyWithAvailabilityAsync(
-        int propertyId,
-        CancellationToken ct)
+    public async Task<Property?> GetPropertyWithAvailabilityAsync(int propertyId, CancellationToken ct)
     {
         return await _db.Properties
             .Include(p => p.Availabilities)
             .FirstOrDefaultAsync(p => p.Id == propertyId, ct);
     }
 
-    public async Task<Property?> GetPropertyWithPhotosAsync(
-        int propertyId,
-        CancellationToken ct)
+    public async Task<Property?> GetPropertyWithPhotosAsync(int propertyId, CancellationToken ct)
     {
         return await _db.Properties
             .Include(p => p.Photos)
@@ -175,9 +165,7 @@ public class PropertyRepository : IPropertyRepository
         return Task.CompletedTask;
     }
 
-    public async Task<List<PropertyPhoto>> GetPhotosByPropertyIdAsync(
-        int propertyId,
-        CancellationToken ct)
+    public async Task<List<PropertyPhoto>> GetPhotosByPropertyIdAsync(int propertyId, CancellationToken ct)
     {
         return await _db.PropertyPhotos
             .Where(p => p.PropertyId == propertyId)
@@ -186,19 +174,12 @@ public class PropertyRepository : IPropertyRepository
             .ToListAsync(ct);
     }
 
-    public async Task UpsertAvailabilityAsync(
-        int propertyId,
-        DateOnly date,
-        decimal price,
-        bool isAvailable,
-        CancellationToken ct)
+    public async Task UpsertAvailabilityAsync(int propertyId, DateOnly date, decimal price, bool isAvailable, CancellationToken ct)
     {
-        var existingAvailability = await _db.PropertyAvailabilities
-            .FirstOrDefaultAsync(
-                a => a.PropertyId == propertyId && a.Date == date,
-                ct);
+        var existing = await _db.PropertyAvailabilities
+            .FirstOrDefaultAsync(a => a.PropertyId == propertyId && a.Date == date, ct);
 
-        if (existingAvailability is null)
+        if (existing is null)
         {
             _db.PropertyAvailabilities.Add(new PropertyAvailability
             {
@@ -207,14 +188,14 @@ public class PropertyRepository : IPropertyRepository
                 Price = price,
                 IsAvailable = isAvailable
             });
-
             return;
         }
 
-        existingAvailability.Price = price;
-        existingAvailability.IsAvailable = isAvailable;
+        existing.Price = price;
+        existing.IsAvailable = isAvailable;
     }
 
+    // ✅ FIXED METHOD (mungonte)
     public async Task<List<Property>> SearchAsync(
         string city,
         int guests,
@@ -224,15 +205,19 @@ public class PropertyRepository : IPropertyRepository
         decimal? maxPrice,
         CancellationToken ct)
     {
+        var normalizedCity = city.ToLower();
+
         var query = _db.Properties
             .Include(p => p.Address)
             .Include(p => p.Availabilities)
             .Where(p =>
                 p.IsActive &&
                 p.IsApproved &&
-                p.Address.City == city &&
+                p.Address.City.ToLower() == normalizedCity &&
                 p.MaxGuests >= guests &&
-                p.Availabilities.Any(a => a.Date == date && a.IsAvailable));
+                p.Availabilities.Any(a =>
+                    a.Date == date &&
+                    a.IsAvailable));
 
         if (!string.IsNullOrWhiteSpace(propertyType) &&
             Enum.TryParse<PropertyType>(propertyType, true, out var parsedType))
@@ -273,16 +258,19 @@ public class PropertyRepository : IPropertyRepository
         int pageSize,
         CancellationToken ct)
     {
+        var normalizedCity = city.ToLower();
+
         var query = _db.Properties
             .AsNoTracking()
             .Include(p => p.Address)
-            .Include(p => p.Availabilities)
             .Where(p =>
                 p.IsActive &&
                 p.IsApproved &&
-                p.Address.City == city &&
+                p.Address.City.ToLower() == normalizedCity &&
                 p.MaxGuests >= guests &&
-                p.Availabilities.Any(a => a.Date == date && a.IsAvailable));
+                p.Availabilities.Any(a =>
+                    a.Date == date &&
+                    a.IsAvailable));
 
         if (!string.IsNullOrWhiteSpace(propertyType) &&
             Enum.TryParse<PropertyType>(propertyType, true, out var parsedType))
@@ -308,21 +296,21 @@ public class PropertyRepository : IPropertyRepository
                     a.Price <= maxPrice.Value));
         }
 
-        var normalizedSort = sortBy?.Trim().ToLower();
+        var normalizedSort = sortBy?.ToLower();
 
         query = normalizedSort switch
         {
             "priceasc" => query.OrderBy(p =>
                 p.Availabilities
                     .Where(a => a.Date == date && a.IsAvailable)
-                    .Select(a => a.Price)
-                    .FirstOrDefault()),
+                    .Select(a => (decimal?)a.Price)
+                    .Min() ?? 0),
 
             "pricedesc" => query.OrderByDescending(p =>
                 p.Availabilities
                     .Where(a => a.Date == date && a.IsAvailable)
-                    .Select(a => a.Price)
-                    .FirstOrDefault()),
+                    .Select(a => (decimal?)a.Price)
+                    .Min() ?? 0),
 
             _ => query.OrderByDescending(p => p.CreatedAt)
         };

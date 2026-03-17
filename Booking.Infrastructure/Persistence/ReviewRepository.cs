@@ -3,6 +3,11 @@ using Booking.Application.Features.Reviews.Persistence;
 using Booking.Domain.Entities.Reviews;
 using Booking.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 using BookingEntity = Booking.Domain.Entities.Bookings.Booking;
 
@@ -50,7 +55,7 @@ public class ReviewRepository : IReviewRepository
         CancellationToken cancellationToken)
     {
         var query =
-            from review in _context.Reviews
+            from review in _context.Reviews.AsNoTracking()
             join booking in _context.Bookings on review.BookingId equals booking.Id
             where booking.PropertyId == propertyId
             select new PropertyReviewDto

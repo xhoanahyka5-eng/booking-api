@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Text;
 
 namespace Booking.Infrastructure;
@@ -33,12 +34,11 @@ public static class InfrastructureRegistration
         services.Configure<SendGridSettings>(
             configuration.GetSection("SendGridSettings"));
 
-      
-
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IPropertyRepository, PropertyRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IEmailService, SendGridEmailService>();
 

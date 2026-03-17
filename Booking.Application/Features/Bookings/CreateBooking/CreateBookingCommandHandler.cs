@@ -32,6 +32,13 @@ public class CreateBookingCommandHandler
         CreateBookingCommand request,
         CancellationToken cancellationToken)
     {
+        // ✅ 1. Date validation
+        if (request.StartDate >= request.EndDate)
+            throw new ConflictException("Invalid date range.");
+
+        if (request.StartDate < DateOnly.FromDateTime(DateTime.UtcNow))
+            throw new ConflictException("Cannot book in the past.");
+
         var property = await _bookingRepository.GetPropertyWithAvailabilityAsync(
             request.PropertyId,
             cancellationToken);
@@ -39,6 +46,7 @@ public class CreateBookingCommandHandler
         if (property is null)
             throw new NotFoundException("Property not found.");
 
+        // ✅ 2. Guest count validation
         if (request.GuestCount > property.MaxGuests)
             throw new ConflictException("Guest count exceeds property capacity.");
 
@@ -53,6 +61,16 @@ public class CreateBookingCommandHandler
 
         if (availableDates.Count != requestedDates.Count)
             throw new ConflictException("Selected dates are not fully available.");
+
+        // ✅ 3. Double booking check
+        var alreadyBooked = await _bookingRepository.ExistsAsync(
+            request.PropertyId,
+            request.StartDate,
+            request.EndDate,
+            cancellationToken);
+
+        if (alreadyBooked)
+            throw new ConflictException("Property already booked for selected dates.");
 
         var totalPrice = availableDates.Sum(x => x.Price);
 
@@ -70,6 +88,18 @@ public class CreateBookingCommandHandler
             booking,
             cancellationToken);
 
+        // ✅ 4. Update availability
+        foreach (var date in requestedDates)
+        {
+            await _bookingRepository.MarkUnavailableAsync(
+                request.PropertyId,
+                date,
+                cancellationToken);
+        }
+
+        await _bookingRepository.SaveChangesAsync(cancellationToken);
+
+        // ✅ 5. Email
         var guest = await _userRepository.GetByIdAsync(
             request.GuestId,
             cancellationToken);
@@ -104,9 +134,8 @@ Booking Platform"
             {
                 _logger.LogWarning(
                     ex,
-                    "Booking {BookingId} was created, but email could not be sent to {Email}.",
-                    bookingId,
-                    guest.Email);
+                    "Booking {BookingId} created but email failed.",
+                    bookingId);
             }
         }
 

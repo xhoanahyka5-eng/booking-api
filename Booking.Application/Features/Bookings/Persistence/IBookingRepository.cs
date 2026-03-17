@@ -61,5 +61,16 @@ public interface IBookingRepository
         DateTime cutoffUtc,
         CancellationToken cancellationToken);
 
-    Task SaveChangesAsync(CancellationToken cancellationToken);
+    Task<bool> ExistsAsync(
+        int propertyId,
+        DateOnly startDate,
+        DateOnly endDate,
+        CancellationToken ct);
+
+    Task MarkUnavailableAsync(
+        int propertyId,
+        DateOnly date,
+        CancellationToken ct);
+
+    Task SaveChangesAsync(CancellationToken ct);
 }
