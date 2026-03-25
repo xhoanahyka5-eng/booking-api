@@ -14,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.Text;
 
 namespace Booking.Infrastructure;
@@ -44,6 +43,8 @@ public static class InfrastructureRegistration
 
         services.AddHostedService<CompleteBookingsBackgroundService>();
         services.AddHostedService<ExpirePendingBookingsBackgroundService>();
+        services.AddHostedService<BookingReminderBackgroundService>();
+        services.AddScoped<ILiveNotificationService, SignalRLiveNotificationService>();
 
         return services;
     }
@@ -73,21 +74,47 @@ public static class InfrastructureRegistration
         })
         .AddJwtBearer(options =>
         {
-            options.TokenValidationParameters =
-                new TokenValidationParameters
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+
+                ValidateIssuer = true,
+                ValidIssuer = jwtSettings.Issuer,
+
+                ValidateAudience = true,
+                ValidAudience = jwtSettings.Audience,
+
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings.Issuer,
-                    ValidAudience = jwtSettings.Audience,
-                    IssuerSigningKey =
-                        new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(jwtSettings.SecretKey)
-                        ),
-                    ClockSkew = TimeSpan.Zero
-                };
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+
+                    Console.WriteLine($"JWT PATH: {path}");
+                    Console.WriteLine($"JWT TOKEN EXISTS: {!string.IsNullOrEmpty(accessToken)}");
+
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        path.StartsWithSegments("/hubs/notifications"))
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                },
+
+                OnAuthenticationFailed = context =>
+                {
+                    Console.WriteLine("JWT AUTH FAILED: " + context.Exception.Message);
+                    return Task.CompletedTask;
+                }
+        };
         });
 
         services.AddHttpContextAccessor();

@@ -1,10 +1,17 @@
 ﻿using Booking.Application.Abstractions.Email;
+using Booking.Application.Abstractions.Logging;
+using Booking.Application.Abstractions.Messaging;
+using Booking.Application.Abstractions.Notifications;
+using Booking.Application.Common.Emails;
+using Booking.Application.Common.Events;
 using Booking.Application.Common.Exceptions;
+using Booking.Application.Common.Logging;
 using Booking.Application.Features.Bookings.Persistence;
 using Booking.Application.Features.Users.Persistence;
 using Booking.Domain.Entities.Bookings;
 using MediatR;
 using Microsoft.Extensions.Logging;
+
 
 namespace Booking.Application.Features.Bookings.ConfirmBooking;
 
@@ -15,17 +22,25 @@ public class ConfirmBookingCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IEmailService _emailService;
     private readonly ILogger<ConfirmBookingCommandHandler> _logger;
+    private readonly ILiveNotificationService _liveNotificationService;
+    private readonly IKafkaLogProducer _kafkaLogProducer;
+    private readonly IBookingEventProducer _bookingEventProducer;
 
     public ConfirmBookingCommandHandler(
         IBookingRepository bookingRepository,
         IUserRepository userRepository,
         IEmailService emailService,
-        ILogger<ConfirmBookingCommandHandler> logger)
+        INotificationService notificationService,
+        ILogger<ConfirmBookingCommandHandler> logger,
+        ILiveNotificationService liveNotificationService,
+        IKafkaLogProducer kafkaLogProducer)
     {
         _bookingRepository = bookingRepository;
         _userRepository = userRepository;
         _emailService = emailService;
         _logger = logger;
+        _liveNotificationService = liveNotificationService;
+        _kafkaLogProducer = kafkaLogProducer;
     }
 
     public async Task<Unit> Handle(
@@ -71,36 +86,31 @@ public class ConfirmBookingCommandHandler
 
         await _bookingRepository.SaveChangesAsync(cancellationToken);
 
-        var guest = await _userRepository.GetByIdAsync(
-            booking.GuestId,
-            cancellationToken);
+        var guest = await _userRepository.GetByIdAsync(booking.GuestId, cancellationToken);
+
+        var propertyName = booking.Property?.Name ?? "your property";
+        var city = booking.Property?.Address?.City ?? "your destination";
+        var startDateText = booking.StartDate.ToString("dd/MM/yyyy");
+        var endDateText = booking.EndDate.ToString("dd/MM/yyyy");
 
         if (guest is not null && !string.IsNullOrWhiteSpace(guest.Email))
         {
             try
             {
-                await _emailService.SendAsync(
-                    new EmailMessage
-                    {
-                        To = guest.Email,
-                        Subject = "Booking confirmed",
-                        Body =
-$@"Hello {guest.FirstName},
-
-Good news. Your booking has been confirmed by the host.
-
-Booking details:
-Property Id: {booking.PropertyId}
-Check-in: {booking.StartDate}
-Check-out: {booking.EndDate}
-Guests: {booking.GuestCount}
-Total price: {booking.TotalPrice}
-
-We wish you a great stay.
-
-Booking Platform"
-                    },
-                    cancellationToken);
+                await _emailService.SendAsync(new EmailMessage
+                {
+                    To = guest.Email,
+                    Subject = "Booking confirmed",
+                    Body = BookingEmailTemplates.BuildBookingConfirmedBody(
+                        guest.FirstName,
+                        propertyName,
+                        city,
+                        booking.StartDate,
+                        booking.EndDate,
+                        booking.GuestCount,
+                        booking.TotalPrice,
+                        booking.Property.CheckInTime)
+                }, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -111,6 +121,61 @@ Booking Platform"
                     guest.Email);
             }
         }
+
+        try
+        {
+            await _notificationService.AddAsync(
+                booking.GuestId,
+                "booking-confirmed",
+                "Booking confirmed",
+                $"Your booking for {propertyName} from {startDateText} to {endDateText} was confirmed.",
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Booking {BookingId} was confirmed, but in-app notification could not be saved for guest {GuestId}.",
+                booking.Id,
+                booking.GuestId);
+        }
+
+        try
+        {
+            await _liveNotificationService.SendToUserAsync(
+                booking.GuestId,
+                "booking-confirmed",
+                "Booking confirmed",
+                $"Your booking for {propertyName} from {startDateText} to {endDateText} was confirmed.",
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Booking {BookingId} was confirmed, but live notification could not be sent to guest {GuestId}.",
+                booking.Id,
+                booking.GuestId);
+        }
+
+        await _kafkaLogProducer.PublishAsync(new LogMessage
+        {
+            Level = "Information",
+            Message = $"Booking {booking.Id} confirmed successfully.",
+            UserId = booking.GuestId.ToString(),
+            TraceId = Guid.NewGuid().ToString()
+        }, cancellationToken);
+
+        await _bookingEventProducer.PublishAsync(new BookingEventMessage
+        {
+            EventType = "booking.confirmed",
+            BookingId = booking.Id,
+            PropertyId = booking.PropertyId,
+            GuestId = booking.GuestId.ToString(),
+            HostId = booking.Property.OwnerId.ToString(),
+            Status = "Confirmed",
+            OccurredAtUtc = DateTime.UtcNow
+        }, cancellationToken);
 
         return Unit.Value;
     }
