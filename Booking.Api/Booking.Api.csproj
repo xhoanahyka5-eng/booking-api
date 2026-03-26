@@ -5,10 +5,10 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<NoWarn>NU1903</NoWarn>
+		<UserSecretsId>booking-api-local-secrets</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- MediatR -->
 		<PackageReference Include="Confluent.Kafka" Version="2.13.2" />
 		<PackageReference Include="MediatR" Version="12.1.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
