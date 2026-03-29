@@ -1,13 +1,10 @@
-﻿using Booking.Application.Abstractions.Email;
+using Booking.Application.Abstractions.Email;
 using Booking.Application.Abstractions.Logging;
 using Booking.Application.Abstractions.Messaging;
 using Booking.Application.Abstractions.Notifications;
-using Booking.Application.Common.Bookings;
-using Booking.Application.Common.Emails;
 using Booking.Application.Common.Events;
 using Booking.Application.Common.Exceptions;
 using Booking.Application.Common.Logging;
-using Booking.Application.Common.Properties;
 using Booking.Application.Features.Bookings.Persistence;
 using Booking.Application.Features.Users.Persistence;
 using MediatR;
@@ -35,7 +32,8 @@ public class CreateBookingCommandHandler
         INotificationService notificationService,
         ILiveNotificationService liveNotificationService,
         ILogger<CreateBookingCommandHandler> logger,
-        IKafkaLogProducer kafkaLogProducer)
+        IKafkaLogProducer kafkaLogProducer,
+        IBookingEventProducer bookingEventProducer)
 
     {
         _bookingRepository = bookingRepository;
@@ -45,13 +43,13 @@ public class CreateBookingCommandHandler
         _liveNotificationService = liveNotificationService;
         _logger = logger;
         _kafkaLogProducer = kafkaLogProducer;
+        _bookingEventProducer = bookingEventProducer;
     }
 
     public async Task<int> Handle(
         CreateBookingCommand request,
         CancellationToken cancellationToken)
     {
-        // ✅ 1. Date validation
         if (request.StartDate >= request.EndDate)
             throw new ConflictException("Invalid date range.");
 
@@ -65,7 +63,6 @@ public class CreateBookingCommandHandler
         if (property is null)
             throw new NotFoundException("Property not found.");
 
-        // ✅ 2. Guest count validation
         if (request.GuestCount > property.MaxGuests)
             throw new ConflictException("Guest count exceeds property capacity.");
 
@@ -73,16 +70,6 @@ public class CreateBookingCommandHandler
             .Range(0, request.EndDate.DayNumber - request.StartDate.DayNumber)
             .Select(offset => request.StartDate.AddDays(offset))
             .ToList();
-
-        var nights = requestedDates.Count;
-        var policy = PropertyPolicyCodec.Parse(property.Rules);
-
-        var availableDates = property.Availabilities
-            .Where(a => requestedDates.Contains(a.Date) && a.IsAvailable)
-            .ToList();
-
-        if (policy.MaximumStayNights.HasValue && nights > policy.MaximumStayNights.Value)
-            throw new ConflictException($"Maximum stay is {policy.MaximumStayNights.Value} night(s).");
 
         var availableDates = property.Availabilities
             .Where(a => requestedDates.Contains(a.Date) && a.IsAvailable)
@@ -107,27 +94,12 @@ public class CreateBookingCommandHandler
             request.GuestId,
             request.StartDate,
             request.EndDate,
-            request.GuestCount
-        );
-
-        var booking = new BookingEntity(
-            request.PropertyId,
-            request.GuestId,
-            request.StartDate,
-            request.EndDate,
             request.GuestCount);
 
-        booking.SetPricing(
-            pricing.PriceForPeriod,
-            pricing.CleaningFee,
-            pricing.AdditionalGuestFees,
-            pricing.ServiceFee,
-            pricing.Tax,
-            pricing.Discount);
+        booking.SetPricing(totalPrice);
 
         var bookingId = await _bookingRepository.AddBookingAsync(booking, cancellationToken);
 
-        // ✅ 4. Update availability
         foreach (var date in requestedDates)
         {
             await _bookingRepository.MarkUnavailableAsync(
@@ -138,12 +110,14 @@ public class CreateBookingCommandHandler
 
         await _bookingRepository.SaveChangesAsync(cancellationToken);
 
-        // ✅ 5. Email
         var guest = await _userRepository.GetByIdAsync(
             request.GuestId,
             cancellationToken);
 
         var propertyName = property.Name;
+        var ownerId = await _bookingRepository.GetPropertyOwnerIdAsync(
+            request.PropertyId,
+            cancellationToken);
         var startDateText = request.StartDate.ToString("dd/MM/yyyy");
         var endDateText = request.EndDate.ToString("dd/MM/yyyy");
 

@@ -1,6 +1,7 @@
-﻿using Booking.Domain.Entities.Addresses;
+using Booking.Domain.Entities.Addresses;
 using Booking.Domain.Entities.Authentication;
 using Booking.Domain.Entities.OwnerProfiles;
+using Booking.Domain.Entities.Payments;
 using Booking.Domain.Entities.Properties;
 using Booking.Domain.Entities.Reviews;
 using Booking.Domain.Entities.Roles;
@@ -33,6 +34,7 @@ public class BookingDbContext : DbContext
     public DbSet<BookingEntity> Bookings => Set<BookingEntity>();
     public DbSet<PropertyAvailability> PropertyAvailabilities => Set<PropertyAvailability>();
     public DbSet<PropertyPhoto> PropertyPhotos => Set<PropertyPhoto>();
+    public DbSet<BookingPayment> BookingPayments => Set<BookingPayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -145,7 +147,7 @@ public class BookingDbContext : DbContext
 
         modelBuilder.Entity<BookingEntity>(entity =>
         {
-            entity.HasOne<PropertyEntity>()
+            entity.HasOne(b => b.Property)
                 .WithMany()
                 .HasForeignKey(b => b.PropertyId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -179,6 +181,27 @@ public class BookingDbContext : DbContext
 
             entity.HasIndex(r => r.BookingId)
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<BookingPayment>(entity =>
+        {
+            entity.HasKey(bp => bp.Id);
+
+            entity.Property(bp => bp.Amount).HasPrecision(18, 2);
+            entity.Property(bp => bp.RefundAmount).HasPrecision(18, 2);
+            entity.Property(bp => bp.PenaltyAmount).HasPrecision(18, 2);
+
+            entity.Property(bp => bp.Currency)
+                .IsRequired()
+                .HasMaxLength(3);
+
+            entity.HasIndex(bp => bp.BookingId)
+                .IsUnique();
+
+            entity.HasOne<BookingEntity>()
+                .WithMany()
+                .HasForeignKey(bp => bp.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

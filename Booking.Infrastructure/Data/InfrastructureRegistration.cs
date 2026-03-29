@@ -1,5 +1,10 @@
+using System;
+using System.Text;
+using System.Threading.Tasks;
 using Booking.Application.Abstractions.Authentication;
 using Booking.Application.Abstractions.Email;
+using Booking.Application.Abstractions.Notifications;
+using Booking.Application.Abstractions.Payments;
 using Booking.Application.Features.Bookings.Persistence;
 using Booking.Application.Features.Properties.Persistence;
 using Booking.Application.Features.Reviews.Persistence;
@@ -8,13 +13,14 @@ using Booking.Infrastructure.Authentication;
 using Booking.Infrastructure.BackgroundJobs;
 using Booking.Infrastructure.Data;
 using Booking.Infrastructure.Email;
+using Booking.Infrastructure.Notifications;
+using Booking.Infrastructure.Payments;
 using Booking.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 namespace Booking.Infrastructure;
 
@@ -40,6 +46,8 @@ public static class InfrastructureRegistration
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IEmailService, SendGridEmailService>();
+        services.AddSingleton<INotificationService, FileNotificationService>();
+        services.AddScoped<IBookingPaymentService, BookingPaymentService>();
 
         services.AddHostedService<CompleteBookingsBackgroundService>();
         services.AddHostedService<ExpirePendingBookingsBackgroundService>();

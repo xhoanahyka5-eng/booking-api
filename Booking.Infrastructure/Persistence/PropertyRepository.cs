@@ -1,4 +1,4 @@
-﻿using Booking.Application.Features.Properties.Persistence;
+using Booking.Application.Features.Properties.Persistence;
 using Booking.Domain.Entities.Addresses;
 using Booking.Domain.Entities.Properties;
 using Booking.Infrastructure.Data;
@@ -254,6 +254,8 @@ public class PropertyRepository : IPropertyRepository
         decimal? minPrice,
         decimal? maxPrice,
         string? sortBy,
+        decimal? minRating,
+        string? amenities,
         int pageNumber,
         int pageSize,
         CancellationToken ct)
@@ -296,24 +298,78 @@ public class PropertyRepository : IPropertyRepository
                     a.Price <= maxPrice.Value));
         }
 
-        var normalizedSort = sortBy?.ToLower();
-
-        query = normalizedSort switch
+        if (!string.IsNullOrWhiteSpace(amenities))
         {
-            "priceasc" => query.OrderBy(p =>
-                p.Availabilities
-                    .Where(a => a.Date == date && a.IsAvailable)
-                    .Select(a => (decimal?)a.Price)
-                    .Min() ?? 0),
+            var keywords = amenities
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(k => k.Trim().ToLowerInvariant())
+                .Where(k => k.Length > 0)
+                .ToList();
 
-            "pricedesc" => query.OrderByDescending(p =>
-                p.Availabilities
-                    .Where(a => a.Date == date && a.IsAvailable)
-                    .Select(a => (decimal?)a.Price)
-                    .Min() ?? 0),
+            if (keywords.Count > 0)
+            {
+                query = query.Where(p =>
+                    p.Amenities != null &&
+                    keywords.All(k => p.Amenities.ToLower().Contains(k)));
+            }
+        }
 
-            _ => query.OrderByDescending(p => p.CreatedAt)
-        };
+        if (minRating.HasValue)
+        {
+            var min = (double)minRating.Value;
+            var qualifyingIds = await _db.Reviews
+                .AsNoTracking()
+                .Join(_db.Bookings, r => r.BookingId, b => b.Id, (r, b) => new { r.Rating, b.PropertyId })
+                .GroupBy(x => x.PropertyId)
+                .Where(g => g.Average(x => x.Rating) >= min)
+                .Select(g => g.Key)
+                .ToListAsync(ct);
+
+            query = query.Where(p => qualifyingIds.Contains(p.Id));
+        }
+
+        var normalizedSort = sortBy?.ToLowerInvariant();
+
+        if (normalizedSort == "ratingdesc" || normalizedSort == "ratingasc")
+        {
+            query = normalizedSort == "ratingdesc"
+                ? query.OrderByDescending(p =>
+                    _db.Reviews
+                        .Join(_db.Bookings, r => r.BookingId, b => b.Id, (r, b) => new { r, b })
+                        .Where(x => x.b.PropertyId == p.Id)
+                        .Average(x => (double?)x.r.Rating) ?? 0)
+                : query.OrderBy(p =>
+                    _db.Reviews
+                        .Join(_db.Bookings, r => r.BookingId, b => b.Id, (r, b) => new { r, b })
+                        .Where(x => x.b.PropertyId == p.Id)
+                        .Average(x => (double?)x.r.Rating) ?? 0);
+        }
+        else if (normalizedSort == "popularity")
+        {
+            query = query.OrderByDescending(p =>
+                _db.Bookings.Count(b => b.PropertyId == p.Id));
+        }
+        else
+        {
+            query = normalizedSort switch
+            {
+                "priceasc" => query.OrderBy(p =>
+                    p.Availabilities
+                        .Where(a => a.Date == date && a.IsAvailable)
+                        .Select(a => (decimal?)a.Price)
+                        .Min() ?? 0),
+
+                "pricedesc" => query.OrderByDescending(p =>
+                    p.Availabilities
+                        .Where(a => a.Date == date && a.IsAvailable)
+                        .Select(a => (decimal?)a.Price)
+                        .Min() ?? 0),
+
+                "newest" => query.OrderByDescending(p => p.CreatedAt),
+
+                _ => query.OrderByDescending(p => p.CreatedAt)
+            };
+        }
 
         var totalCount = await query.CountAsync(ct);
 

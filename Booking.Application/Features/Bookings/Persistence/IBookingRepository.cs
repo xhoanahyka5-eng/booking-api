@@ -1,4 +1,4 @@
-﻿using Booking.Application.Features.Bookings.GetHostBookings;
+using Booking.Application.Features.Bookings.GetHostBookings;
 using Booking.Application.Features.Bookings.GetMyBookings;
 using Booking.Domain.Entities.Bookings;
 
@@ -9,6 +9,18 @@ namespace Booking.Application.Features.Bookings.Persistence;
 
 public interface IBookingRepository
 {
+
+    Task<bool> ExistsConfirmedOverlapAsync(
+    int propertyId,
+    DateOnly startDate,
+    DateOnly endDate,
+    int excludedBookingId,
+    CancellationToken ct);
+
+    Task<List<BookingEntity>> GetConfirmedBookingsEndingOnDateAsync(
+    DateOnly endDate,
+    CancellationToken ct);
+
     Task<int> AddBookingAsync(
         BookingEntity booking,
         CancellationToken cancellationToken);
@@ -55,6 +67,10 @@ public interface IBookingRepository
 
     Task<List<BookingEntity>> GetConfirmedBookingsToCompleteAsync(
         DateOnly today,
+        CancellationToken cancellationToken);
+
+    Task<List<BookingEntity>> GetConfirmedBookingsStartingOnDateAsync(
+        DateOnly startDate,
         CancellationToken cancellationToken);
 
     Task<List<BookingEntity>> GetPendingBookingsToExpireAsync(

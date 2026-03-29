@@ -1,4 +1,4 @@
-﻿using Booking.Application.Features.Bookings.GetHostBookings;
+using Booking.Application.Features.Bookings.GetHostBookings;
 using Booking.Application.Features.Bookings.GetMyBookings;
 using Booking.Application.Features.Bookings.Persistence;
 using Booking.Domain.Entities.Bookings;
@@ -10,13 +10,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-// ✅ FIX për konflikt namespace
 using BookingEntity = Booking.Domain.Entities.Bookings.Booking;
 using PropertyEntity = Booking.Domain.Entities.Properties.Property;
 
 namespace Booking.Infrastructure.Persistence;
 
 public class BookingRepository : IBookingRepository
+    
 {
     private readonly BookingDbContext _db;
 
@@ -40,6 +40,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _db.Bookings
             .Include(b => b.Property)
+            .ThenInclude(p => p.Address)
             .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
     }
 
@@ -113,6 +114,9 @@ public class BookingRepository : IBookingRepository
             .ThenInclude(p => p.Address)
             .Where(b => b.GuestId == guestId);
 
+        if (status.HasValue)
+            query = query.Where(b => b.BookingStatus == status.Value);
+
         var totalCount = await query.CountAsync(ct);
 
         var items = await query
@@ -123,24 +127,17 @@ public class BookingRepository : IBookingRepository
             {
                 BookingId = b.Id,
                 PropertyId = b.PropertyId,
-
                 PropertyName = b.Property.Name,
                 City = b.Property.Address.City,
-
                 StartDate = b.StartDate,
                 EndDate = b.EndDate,
-
                 GuestCount = b.GuestCount,
-
                 PriceForPeriod = b.PriceForPeriod,
                 CleaningFee = b.CleaningFee,
                 AmenitiesUpCharge = b.AmenitiesUpCharge,
                 TotalPrice = b.TotalPrice,
-
                 BookingStatus = b.BookingStatus.ToString(),
-
                 IsUpcoming = b.StartDate > DateOnly.FromDateTime(DateTime.UtcNow),
-
                 CreatedAt = b.CreatedAt
             })
             .ToListAsync(ct);
@@ -161,6 +158,9 @@ public class BookingRepository : IBookingRepository
             .ThenInclude(p => p.Address)
             .Where(b => b.Property.OwnerId == hostId);
 
+        if (status.HasValue)
+            query = query.Where(b => b.BookingStatus == status.Value);
+
         var totalCount = await query.CountAsync(ct);
 
         var items = await query
@@ -171,25 +171,17 @@ public class BookingRepository : IBookingRepository
             {
                 BookingId = b.Id,
                 PropertyId = b.PropertyId,
-
                 PropertyName = b.Property.Name,
-
                 GuestId = b.GuestId,
-
                 StartDate = b.StartDate,
                 EndDate = b.EndDate,
-
                 GuestCount = b.GuestCount,
-
                 PriceForPeriod = b.PriceForPeriod,
                 CleaningFee = b.CleaningFee,
                 AmenitiesUpCharge = b.AmenitiesUpCharge,
                 TotalPrice = b.TotalPrice,
-
                 BookingStatus = b.BookingStatus.ToString(),
-
                 IsUpcoming = b.StartDate > DateOnly.FromDateTime(DateTime.UtcNow),
-
                 CreatedAt = b.CreatedAt
             })
             .ToListAsync(ct);
@@ -206,6 +198,24 @@ public class BookingRepository : IBookingRepository
             .ToListAsync(ct);
     }
 
+    public async Task<List<BookingEntity>> GetConfirmedBookingsStartingOnDateAsync(
+        DateOnly startDate,
+        CancellationToken ct)
+    {
+        return await _db.Bookings
+            .Include(b => b.Property)
+            .Where(b => b.BookingStatus == BookingStatus.Confirmed && b.StartDate == startDate)
+            .ToListAsync(ct);
+    }
+    public async Task<List<BookingEntity>> GetConfirmedBookingsEndingOnDateAsync(
+    DateOnly endDate,
+    CancellationToken ct)
+    {
+        return await _db.Bookings
+            .Include(b => b.Property)
+            .Where(b => b.BookingStatus == BookingStatus.Confirmed && b.EndDate == endDate)
+            .ToListAsync(ct);
+    }
     public async Task<List<BookingEntity>> GetPendingBookingsToExpireAsync(
         DateTime cutoffUtc,
         CancellationToken ct)
@@ -224,6 +234,23 @@ public class BookingRepository : IBookingRepository
         return await _db.Bookings
             .AnyAsync(b =>
                 b.PropertyId == propertyId &&
+                b.StartDate < endDate &&
+                b.EndDate > startDate,
+                ct);
+    }
+
+    public async Task<bool> ExistsConfirmedOverlapAsync(
+    int propertyId,
+    DateOnly startDate,
+    DateOnly endDate,
+    int excludedBookingId,
+    CancellationToken ct)
+    {
+        return await _db.Bookings
+            .AnyAsync(b =>
+                b.PropertyId == propertyId &&
+                b.Id != excludedBookingId &&
+                b.BookingStatus == BookingStatus.Confirmed &&
                 b.StartDate < endDate &&
                 b.EndDate > startDate,
                 ct);

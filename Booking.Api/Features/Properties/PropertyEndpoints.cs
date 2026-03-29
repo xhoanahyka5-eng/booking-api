@@ -273,6 +273,8 @@ public static class PropertyEndpoints
                  decimal? minPrice,
                  decimal? maxPrice,
                  string? sortBy,
+                 decimal? minRating,
+                 string? amenities,
                  ISender sender,
                  CancellationToken ct,
                  int pageNumber = 1,
@@ -287,6 +289,8 @@ public static class PropertyEndpoints
                      minPrice,
                      maxPrice,
                      sortBy,
+                     minRating,
+                     amenities,
                      pageNumber,
                      pageSize
                  );

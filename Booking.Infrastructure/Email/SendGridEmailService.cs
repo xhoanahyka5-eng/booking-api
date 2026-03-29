@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,12 +30,26 @@ public class SendGridEmailService : IEmailService
         var from = new EmailAddress(_settings.FromEmail, _settings.FromName);
         var to = new EmailAddress(message.To);
 
+        var plainTextBody =
+            !string.IsNullOrWhiteSpace(message.PlainTextBody)
+                ? message.PlainTextBody
+                : !string.IsNullOrWhiteSpace(message.Body)
+                    ? message.Body
+                    : "Please view this email in HTML format.";
+
+        var htmlBody =
+            !string.IsNullOrWhiteSpace(message.HtmlBody)
+                ? message.HtmlBody
+                : !string.IsNullOrWhiteSpace(message.Body)
+                    ? $"<pre style=\"font-family:Arial,Helvetica,sans-serif; white-space:pre-wrap;\">{WebUtility.HtmlEncode(message.Body)}</pre>"
+                    : $"<pre style=\"font-family:Arial,Helvetica,sans-serif; white-space:pre-wrap;\">{WebUtility.HtmlEncode(plainTextBody)}</pre>";
+
         var msg = MailHelper.CreateSingleEmail(
             from,
             to,
             message.Subject,
-            message.Body,
-            message.Body
+            plainTextBody,
+            htmlBody
         );
 
         var response = await client.SendEmailAsync(msg, cancellationToken);

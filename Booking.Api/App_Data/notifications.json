@@ -1,0 +1,298 @@
+[
+  {
+    "Id": "68b26957-3fe8-48bb-8da0-d3f0722178db",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-created",
+    "Title": "Booking request created",
+    "Message": "Your request for Sea View Apartment from 10/04/2026 to 12/04/2026 is pending host approval.",
+    "CreatedAtUtc": "2026-03-27T21:56:27.4188811Z"
+  },
+  {
+    "Id": "3e3553c7-37d8-4c50-aae3-bed4bb999a2e",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-request",
+    "Title": "New booking request",
+    "Message": "A guest requested Sea View Apartment from 10/04/2026 to 12/04/2026.",
+    "CreatedAtUtc": "2026-03-27T21:56:27.4461336Z"
+  },
+  {
+    "Id": "5285f0bb-70e5-4fea-b528-ac55c2b2af09",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-created",
+    "Title": "Booking request created",
+    "Message": "Your request for Sea View Apartment from 12/04/2026 to 14/04/2026 is pending host approval.",
+    "CreatedAtUtc": "2026-03-27T22:04:20.6582086Z"
+  },
+  {
+    "Id": "d319b362-7b1e-4680-b303-ee172f6b448f",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-request",
+    "Title": "New booking request",
+    "Message": "A guest requested Sea View Apartment from 12/04/2026 to 14/04/2026.",
+    "CreatedAtUtc": "2026-03-27T22:04:20.686482Z"
+  },
+  {
+    "Id": "8e00becf-9ab3-46cf-a54c-44305874122d",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts on 29/03/2026.",
+    "CreatedAtUtc": "2026-03-28T17:46:42.0057412Z"
+  },
+  {
+    "Id": "3f8ea4cf-e20f-49f3-91df-59c97be14daa",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-rejected",
+    "Title": "Booking rejected",
+    "Message": "Your booking for Sea View Apartment from 12/04/2026 to 14/04/2026 was rejected by the host.",
+    "CreatedAtUtc": "2026-03-28T17:53:23.3118055Z"
+  },
+  {
+    "Id": "a4baffbe-cbe1-44db-a8b0-8133367eb94d",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-rejected",
+    "Title": "Booking rejected",
+    "Message": "Your booking for Sea View Apartment from 10/04/2026 to 12/04/2026 was rejected by the host.",
+    "CreatedAtUtc": "2026-03-28T18:11:04.8257801Z"
+  },
+  {
+    "Id": "724e9775-2b54-4adb-97ac-b66419e148c5",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts on 29/03/2026.",
+    "CreatedAtUtc": "2026-03-28T18:31:38.5258255Z"
+  },
+  {
+    "Id": "131d3270-dfe7-43f7-b980-59911ee8d5fd",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-created",
+    "Title": "Booking request created",
+    "Message": "Your request for Sea View Apartment from 15/04/2026 to 17/04/2026 is pending host approval.",
+    "CreatedAtUtc": "2026-03-28T18:47:33.9476535Z"
+  },
+  {
+    "Id": "9b438afc-7dfc-4927-81f3-3d9d9b04b330",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-request",
+    "Title": "New booking request",
+    "Message": "A guest requested Sea View Apartment from 15/04/2026 to 17/04/2026.",
+    "CreatedAtUtc": "2026-03-28T18:47:33.9719773Z"
+  },
+  {
+    "Id": "b07ad7cb-e02a-40dd-ba80-5556c1fc9b0e",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-rejected",
+    "Title": "Booking rejected",
+    "Message": "Your booking for Sea View Apartment from 15/04/2026 to 17/04/2026 was rejected by the host.",
+    "CreatedAtUtc": "2026-03-28T18:48:50.9356907Z"
+  },
+  {
+    "Id": "0843691e-c07f-4adb-bae8-bb4da086bb9b",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts on 29/03/2026.",
+    "CreatedAtUtc": "2026-03-28T19:16:32.7351853Z"
+  },
+  {
+    "Id": "a1a42a31-774c-4d4d-b99e-02e8b956f79d",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-created",
+    "Title": "Booking request created",
+    "Message": "Your request for Sea View Apartment from 18/04/2026 to 20/04/2026 is pending host approval.",
+    "CreatedAtUtc": "2026-03-28T19:18:28.9272221Z"
+  },
+  {
+    "Id": "5fc6203f-9ce7-4cc5-989b-5a7fbfbb0a60",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-request",
+    "Title": "New booking request",
+    "Message": "A guest requested Sea View Apartment from 18/04/2026 to 20/04/2026.",
+    "CreatedAtUtc": "2026-03-28T19:18:28.942701Z"
+  },
+  {
+    "Id": "f73da0a8-1a6c-4f3b-a80b-43cc70d7d591",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-created",
+    "Title": "Booking request created",
+    "Message": "Your request for Sea View Apartment from 20/04/2026 to 23/04/2026 is pending host approval.",
+    "CreatedAtUtc": "2026-03-28T19:42:35.4172381Z"
+  },
+  {
+    "Id": "69401e97-4ac1-4ddd-90a9-3e9150f42316",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-request",
+    "Title": "New booking request",
+    "Message": "A guest requested Sea View Apartment from 20/04/2026 to 23/04/2026.",
+    "CreatedAtUtc": "2026-03-28T19:42:35.4305879Z"
+  },
+  {
+    "Id": "0a2ed81d-6385-49c4-b838-2c6204531ad3",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-rejected",
+    "Title": "Booking rejected",
+    "Message": "Your booking for Sea View Apartment from 20/04/2026 to 23/04/2026 was rejected by the host.",
+    "CreatedAtUtc": "2026-03-28T19:53:52.1715462Z"
+  },
+  {
+    "Id": "006210dd-4e55-4b93-bdcc-a6a9d1190ec1",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-cancelled",
+    "Title": "Booking cancelled",
+    "Message": "Your booking for Sea View Apartment from 18/04/2026 to 20/04/2026 was cancelled successfully.",
+    "CreatedAtUtc": "2026-03-28T19:55:57.0894488Z"
+  },
+  {
+    "Id": "9e5c0d3d-1f43-4ac5-8d91-632eced87654",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-cancelled",
+    "Title": "Booking cancelled",
+    "Message": "A booking for Sea View Apartment from 18/04/2026 to 20/04/2026 was cancelled by the guest.",
+    "CreatedAtUtc": "2026-03-28T19:55:57.1065528Z"
+  },
+  {
+    "Id": "4e5228b7-938a-4daa-aaa7-a613a0673785",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-created",
+    "Title": "Booking request created",
+    "Message": "Your request for Sea View Apartment from 24/04/2026 to 26/04/2026 is pending host approval.",
+    "CreatedAtUtc": "2026-03-28T20:08:26.7870766Z"
+  },
+  {
+    "Id": "2a2a5c69-ede3-4b31-963c-c18a2857dcad",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-request",
+    "Title": "New booking request",
+    "Message": "A guest requested Sea View Apartment from 24/04/2026 to 26/04/2026.",
+    "CreatedAtUtc": "2026-03-28T20:08:26.8038983Z"
+  },
+  {
+    "Id": "3f83f836-e702-4250-b7ed-eee844c01b6c",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts on 29/03/2026.",
+    "CreatedAtUtc": "2026-03-28T20:44:07.2401961Z"
+  },
+  {
+    "Id": "9409f1cc-d7af-497f-823a-98de2fd0d06d",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-created",
+    "Title": "Booking request created",
+    "Message": "Your request for Sea View Apartment from 27/04/2026 to 29/04/2026 is pending host approval.",
+    "CreatedAtUtc": "2026-03-28T20:47:12.3991946Z"
+  },
+  {
+    "Id": "b9ffae3e-6fe9-48b8-90be-d58c01c3c638",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-request",
+    "Title": "New booking request",
+    "Message": "A guest requested Sea View Apartment from 27/04/2026 to 29/04/2026.",
+    "CreatedAtUtc": "2026-03-28T20:47:12.4153306Z"
+  },
+  {
+    "Id": "50ffcf22-e738-49a7-8a13-000b31f20c99",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-confirmed",
+    "Title": "Booking confirmed",
+    "Message": "Your booking for Sea View Apartment from 24/04/2026 to 26/04/2026 was confirmed.",
+    "CreatedAtUtc": "2026-03-28T20:47:31.1554822Z"
+  },
+  {
+    "Id": "8b32e0eb-a182-4e44-81cd-8ee1e457bd2d",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts on 29/03/2026.",
+    "CreatedAtUtc": "2026-03-28T21:03:32.3929371Z"
+  },
+  {
+    "Id": "21e0b056-f306-4b37-a2c4-e25a31a0e238",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts on 29/03/2026.",
+    "CreatedAtUtc": "2026-03-28T21:06:10.9700637Z"
+  },
+  {
+    "Id": "33c64db5-4e6d-4478-a863-0f74c36ef7fa",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts on 29/03/2026.",
+    "CreatedAtUtc": "2026-03-28T21:12:41.1915393Z"
+  },
+  {
+    "Id": "db9983ac-a9c3-4d91-9d08-c3938b0a25ee",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts on 29/03/2026.",
+    "CreatedAtUtc": "2026-03-28T21:24:54.0953417Z"
+  },
+  {
+    "Id": "340e9448-f6f5-4dab-b011-e37c1fb2aa60",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-cancelled",
+    "Title": "Booking cancelled",
+    "Message": "Your booking for Sea View Apartment from 24/04/2026 to 26/04/2026 was cancelled successfully.",
+    "CreatedAtUtc": "2026-03-28T21:27:55.6539967Z"
+  },
+  {
+    "Id": "4fd5f1f2-71f7-4664-a473-75af7c09378a",
+    "UserId": "aff14d9d-c910-4d3b-8681-2cd2c76ee099",
+    "Type": "booking-cancelled",
+    "Title": "Booking cancelled",
+    "Message": "A booking for Sea View Apartment from 24/04/2026 to 26/04/2026 was cancelled by the guest.",
+    "CreatedAtUtc": "2026-03-28T21:27:55.6673959Z"
+  },
+  {
+    "Id": "abc4e0f9-e9ef-48e5-a663-019bbaa6c31c",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts tomorrow (29/03/2026).",
+    "CreatedAtUtc": "2026-03-28T22:05:23.2552374Z"
+  },
+  {
+    "Id": "abb28530-15bc-4eeb-a89f-698075c52938",
+    "UserId": "41befcd4-ee2f-401c-b27d-febfaf54b401",
+    "Type": "booking-reminder",
+    "Title": "Check-out reminder",
+    "Message": "Reminder: your stay at Sea View Apartment ends tomorrow (29/03/2026).",
+    "CreatedAtUtc": "2026-03-28T22:05:24.7933032Z"
+  },
+  {
+    "Id": "9efa81be-331a-45f7-870d-8cf717c34850",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts tomorrow (29/03/2026).",
+    "CreatedAtUtc": "2026-03-28T22:35:22.7994242Z"
+  },
+  {
+    "Id": "377d9e95-2bf6-48e4-9d9d-b81cb37b2516",
+    "UserId": "346adf7e-3ff1-4a80-a199-c6449aed572b",
+    "Type": "booking-reminder",
+    "Title": "Check-out reminder",
+    "Message": "Reminder: your stay at Sea View Apartment ends tomorrow (29/03/2026).",
+    "CreatedAtUtc": "2026-03-28T22:35:23.622028Z"
+  },
+  {
+    "Id": "daddc4cb-56f3-4c79-8494-735640215318",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Booking reminder",
+    "Message": "Reminder: your stay at Sea View Apartment starts tomorrow (30/03/2026).",
+    "CreatedAtUtc": "2026-03-29T17:30:43.6676639Z"
+  },
+  {
+    "Id": "2413ddac-d613-4c50-860f-8e5631d1650f",
+    "UserId": "8886bb28-dd8c-41e3-845a-40f6b3369cf6",
+    "Type": "booking-reminder",
+    "Title": "Check-out reminder",
+    "Message": "Reminder: your stay at Sea View Apartment ends tomorrow (30/03/2026).",
+    "CreatedAtUtc": "2026-03-29T17:30:44.8315829Z"
+  }
+]

@@ -1,4 +1,4 @@
-﻿using Booking.Domain.Entities.Addresses;
+using Booking.Domain.Entities.Addresses;
 using Booking.Domain.Entities.Properties;
 
 namespace Booking.Application.Features.Properties.Persistence;
@@ -67,6 +67,8 @@ public interface IPropertyRepository
         decimal? minPrice,
         decimal? maxPrice,
         string? sortBy,
+        decimal? minRating,
+        string? amenities,
         int pageNumber,
         int pageSize,
         CancellationToken ct);

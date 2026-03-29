@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Booking.Application.Abstractions.Logging;
 using Confluent.Kafka;
 using AppLogMessage = Booking.Application.Common.Logging.LogMessage;
@@ -9,6 +9,7 @@ public sealed class KafkaLogProducer : IKafkaLogProducer, IDisposable
 {
     private readonly IProducer<Null, string> _producer;
     private readonly ILogger<KafkaLogProducer> _logger;
+    private readonly string _topic;
 
     public KafkaLogProducer(
         IConfiguration configuration,
@@ -19,8 +20,12 @@ public sealed class KafkaLogProducer : IKafkaLogProducer, IDisposable
         var bootstrapServers =
             configuration.GetValue<string>("Kafka:BootstrapServers")
             ?? "localhost:9092";
+        _topic = configuration.GetValue<string>("Kafka:Topic") ?? "booking.logs";
 
-        _logger.LogWarning("Kafka BootstrapServers resolved to: {BootstrapServers}", bootstrapServers);
+        _logger.LogInformation(
+            "Kafka log producer configured. BootstrapServers={BootstrapServers}, Topic={Topic}",
+            bootstrapServers,
+            _topic);
 
         var config = new ProducerConfig
         {
@@ -45,7 +50,7 @@ public sealed class KafkaLogProducer : IKafkaLogProducer, IDisposable
         var payload = JsonSerializer.Serialize(logMessage);
 
         var result = await _producer.ProduceAsync(
-            "booking.logs",
+            _topic,
             new Message<Null, string> { Value = payload },
             CancellationToken.None);
 

@@ -1,4 +1,4 @@
-﻿using Booking.Application.Common.Models;
+using Booking.Application.Common.Models;
 using Booking.Application.Features.Properties.Persistence;
 using MediatR;
 
@@ -29,6 +29,8 @@ public class SearchPropertiesQueryHandler
             request.MinPrice,
             request.MaxPrice,
             request.SortBy,
+            request.MinRating,
+            request.Amenities,
             pageNumber,
             pageSize,
             cancellationToken);

@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace Booking.Application.Features.Properties.SearchProperties;
 
@@ -25,8 +25,15 @@ public class SearchPropertiesQueryValidator
                 string.IsNullOrWhiteSpace(x) ||
                 x.Equals("priceAsc", StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("priceDesc", StringComparison.OrdinalIgnoreCase) ||
-                x.Equals("newest", StringComparison.OrdinalIgnoreCase))
-            .WithMessage("SortBy must be priceAsc, priceDesc, or newest.");
+                x.Equals("newest", StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("ratingAsc", StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("ratingDesc", StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("popularity", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("SortBy must be priceAsc, priceDesc, newest, ratingAsc, ratingDesc, or popularity.");
+
+        RuleFor(x => x.MinRating)
+            .InclusiveBetween(1, 5)
+            .When(x => x.MinRating.HasValue);
 
         RuleFor(x => x)
             .Must(x => !x.MinPrice.HasValue || !x.MaxPrice.HasValue || x.MinPrice <= x.MaxPrice)
